@@ -1,27 +1,32 @@
-# Glowmance App
+# VTYS_Proje / Glowmance App
 
-## Font Setup Instructions
+Yapay zeka destekli kişisel cilt analizi
 
-To complete the UI design, you need to download and add the following font files to the `app/src/main/res/font/` directory:
+## Sunum
 
-### Raleway Font Family
+[Proje Sunumunu Görüntüle](./VTYS-Sunum1.pdf)
 
-Download Raleway from Google Fonts: https://fonts.google.com/specimen/Raleway
+## Font Kurulum Talimatları
 
-Required files:
+(Glowmance Frontend projesi için)
 
-- `raleway_regular.ttf` (Rename from Raleway-Regular.ttf)
-- `raleway_medium.ttf` (Rename from Raleway-Medium.ttf)
-- `raleway_bold.ttf` (Rename from Raleway-Bold.ttf)
+UI tasarımını tamamlamak için aşağıdaki font dosyalarını indirip `app/src/main/res/font/` klasörüne eklemeniz gerekmektedir:
 
-### Lovelo Line Font Family
+### Raleway Font Ailesi
 
-Download Lovelo Line from a font provider (e.g., https://www.fontspring.com/fonts/font-fabric/lovelo)
+Google Fonts'tan indirin: https://fonts.google.com/specimen/Raleway
 
-Required files:
+Gereken dosyalar:
 
-- `lovelo_line_light.ttf` (Rename from Lovelo-LineLight.ttf or equivalent)
-- `lovelo_line_bold.ttf` (Rename from Lovelo-LineBold.ttf or equivalent)
+- `raleway_regular.ttf`
+- `raleway_medium.ttf`
+- `raleway_bold.ttf`
 
-After downloading, place these TTF files in the `app/src/main/res/font/` directory.
+### Lovelo Line Font Ailesi
 
+Font sağlayıcıdan indirin (örn: https://www.fontspring.com/fonts/font-fabric/lovelo)
+
+Gereken dosyalar:
+
+- `lovelo_line_light.ttf`
+- `lovelo_line_bold.ttf`
