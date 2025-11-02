@@ -1,0 +1,209 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: "18"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          python -m pip install --upgrade pip
+          if [ -f ml_service/requirements.txt ]; then pip install -r ml_service/requirements.txt; fi
+
+      - name: Run npm audit
+        run: npm audit --audit-level=critical
+        continue-on-error: true
+
+      - name: Run pip-audit
+        run: |
+          pip install pip-audit
+          pip-audit
+        continue-on-error: true
+
+  test:
+    needs: security-scan
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: glowmance_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      mongodb:
+        image: mongo:6-jammy
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          python -m pip install --upgrade pip
+          if [ -f ml_service/requirements.txt ]; then pip install -r ml_service/requirements.txt; fi
+
+      - name: Wait for database services
+        run: sleep 10
+
+      - name: Run Node.js linter and tests
+        run: |
+          npm run lint
+          npm test
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/glowmance_test
+          MONGODB_URI: mongodb://localhost:27017/glowmance_test
+          JWT_SECRET: test-jwt-secret
+          REFRESH_TOKEN_SECRET: test-refresh-token-secret
+
+      - name: Run Python tests
+        run: |
+          cd ml_service
+          python -m pytest --cov=. --cov-report=xml
+        env:
+          PYTHONPATH: ${{ github.workspace }}/ml_service
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          python -m pip install --upgrade pip
+          if [ -f ml_service/requirements.txt ]; then pip install -r ml_service/requirements.txt; fi
+
+      - name: Build Node.js app
+        run: npm run build --if-present
+
+      - name: Upload Node.js artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-build
+          path: dist/
+          retention-days: 5
+
+      - name: Upload Python service
+        uses: actions/upload-artifact@v4
+        with:
+          name: ml-service
+          path: ml_service/
+          retention-days: 5
+
+  deploy-staging:
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: staging
+    concurrency: staging_environment
+    steps:
+      - name: Download Node.js artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: node-build
+          path: dist
+
+      - name: Download ML service
+        uses: actions/download-artifact@v4
+        with:
+          name: ml-service
+          path: ml_service
+
+      - name: Deploy to staging
+        run: echo "Staging deployment will be configured later"
+        env:
+          NODE_ENV: staging
+
+  deploy-production:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency: production_environment
+    steps:
+      - name: Download Node.js artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: node-build
+          path: dist
+
+      - name: Download ML service
+        uses: actions/download-artifact@v4
+        with:
+          name: ml-service
+          path: ml_service
+
+      - name: Deploy to production
+        run: echo "Production deployment will be configured later"
+        env:
+          NODE_ENV: production
+  run-development:
+    runs-on: ubuntu-latest

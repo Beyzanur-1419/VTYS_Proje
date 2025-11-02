@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:1234@postgres:5432/glowmance
+      - MONGODB_URI=mongodb://mongodb:27017/glowmance
+    volumes:
+      - ./uploads:/usr/src/app/uploads
+    depends_on:
+      - postgres
+      - mongodb
+
+  postgres:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_DB=glowmance
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  mongodb:
+    image: mongo:4.4
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+
+  ml-service:
+    build:
+      context: ./ml_service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - ML_SERVICE_HOST=0.0.0.0
+      - ML_SERVICE_PORT=8000
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./ml_service:/app
+    depends_on:
+      - app
+
+volumes:
+  postgres_data:
+  mongodb_data:
