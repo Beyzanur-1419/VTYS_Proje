@@ -1,32 +1,77 @@
-# VTYS_Proje / Glowmance App
+# GLOWMANCE - AI-Powered Skincare Backend API
 
-Yapay zeka destekli kişisel cilt analizi
+GLOWMANCE, AI destekli cilt bakım analizi ve ürün önerisi sunan backend API projesidir.
 
-## Sunum
+## 🚀 Hızlı Başlangıç
 
-[Proje Sunumunu Görüntüle](./VTYS-Sunum1.pdf)
+### 1. .env Dosyasını Oluşturun
 
-## Font Kurulum Talimatları
+```powershell
+.\create-env.ps1
+```
 
-(Glowmance Frontend projesi için)
+### 2. Bağımlılıkları Yükleyin
 
-UI tasarımını tamamlamak için aşağıdaki font dosyalarını indirip `app/src/main/res/font/` klasörüne eklemeniz gerekmektedir:
+```powershell
+npm install
+```
 
-### Raleway Font Ailesi
+### 3. Server'ı Başlatın
 
-Google Fonts'tan indirin: https://fonts.google.com/specimen/Raleway
+```powershell
+npm run dev
+```
 
-Gereken dosyalar:
+### 4. Test Edin
 
-- `raleway_regular.ttf`
-- `raleway_medium.ttf`
-- `raleway_bold.ttf`
+Tarayıcıda: `http://localhost:3000/health`
 
-### Lovelo Line Font Ailesi
+## 📋 Ön Koşullar
 
-Font sağlayıcıdan indirin (örn: https://www.fontspring.com/fonts/font-fabric/lovelo)
+- Node.js (14+)
+- PostgreSQL (opsiyonel)
+- MongoDB (opsiyonel)
 
-Gereken dosyalar:
+## 📚 Dokümantasyon
 
-- `lovelo_line_light.ttf`
-- `lovelo_line_bold.ttf`
+- **`PROJECT_GUIDE.md`** - Proje yapısı ve kullanım rehberi
+- **`BACKEND_API_DOCUMENTATION.md`** - Tüm API endpoint'lerinin detaylı dokümantasyonu
+- **`SETUP.md`** - Detaylı kurulum rehberi
+- **`INTEGRATION_QUICK_START.md`** - Entegrasyon rehberi
+
+## 🔧 Ana Komutlar
+
+```powershell
+npm run dev          # Development modunda başlat
+npm start            # Production modunda başlat
+npm test             # Testleri çalıştır
+npm run lint         # Code quality kontrolü
+```
+
+## 📁 Proje Yapısı
+
+```
+src/
+├── server.js         # Server başlatma
+├── app.js           # Express uygulaması
+├── config/          # Yapılandırma
+├── controllers/      # Route controller'ları
+├── routes/          # API route'ları
+├── services/        # İş mantığı servisleri
+├── models/          # Veritabanı modelleri
+├── middleware/      # Middleware'ler
+├── database/        # Veritabanı bağlantıları
+├── utils/           # Yardımcı fonksiyonlar
+└── validators/      # Validation'lar
+```
+
+## 🔐 Güvenlik
+
+- JWT tabanlı authentication
+- Bcrypt ile şifre hashleme
+- Input validation
+- Error handling
+
+## 📞 Yardım
+
+Detaylı bilgi için `PROJECT_GUIDE.md` dosyasına bakın.

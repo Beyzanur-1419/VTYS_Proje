@@ -1,0 +1,88 @@
+{
+  "name": "glowmance",
+  "version": "1.0.0",
+  "description": "AI-powered skincare analysis and recommendations",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest",
+    "test:smoke": "jest src/__tests__/integration/smoke.test.js",
+    "setup:db": "node src/database/setup.js",
+    "setup:db:seed": "node src/database/setup.js --seed",
+    "migrate": "sequelize db:migrate",
+    "migrate:undo": "sequelize db:migrate:undo",
+    "seed": "node src/database/seeders/seed.js",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.8.0",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^8.2.1",
+    "express-slow-down": "^3.0.0",
+    "express-validator": "^7.3.0",
+    "form-data": "^4.0.0",
+    "helmet": "^8.1.0",
+    "hpp": "^0.2.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.6.3",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.16.3",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.7",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.18.3",
+    "xss-clean": "^0.1.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "@types/jest": "^30.0.0",
+    "babel-jest": "^30.2.0",
+    "cross-env": "^10.1.0",
+    "eslint": "^8.52.0",
+    "jest": "^30.2.0",
+    "nodemon": "^3.0.1",
+    "sequelize-cli": "^6.6.1",
+    "supertest": "^6.3.4"
+  },
+  "private": true,
+  "jest": {
+    "testEnvironment": "node",
+    "verbose": true,
+    "setupFilesAfterEnv": [
+      "<rootDir>/src/__tests__/setup.js"
+    ],
+    "testMatch": [
+      "<rootDir>/src/__tests__/**/*.test.js",
+      "<rootDir>/src/__tests__/**/*.spec.js"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "clover"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/test/",
+      "/coverage/"
+    ],
+    "testTimeout": 30000
+  }
+}
