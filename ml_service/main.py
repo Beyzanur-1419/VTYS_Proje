@@ -55,16 +55,10 @@ async def health():
     }
 
 
-@app.post("/analyze")
-async def analyze_skin(image: UploadFile = File(...)):
+@app.post("/analyze/skin-type")
+async def analyze_skin_type(image: UploadFile = File(...)):
     """
-    Analyze skin image
-    
-    Args:
-        image: Image file (JPEG, PNG, WebP)
-    
-    Returns:
-        Analysis results with confidence, conditions, and recommendations
+    Analyze skin type from image
     """
     try:
         # Validate file type
@@ -92,47 +86,29 @@ async def analyze_skin(image: UploadFile = File(...)):
             img_format = img.format
             img_size = img.size
             
-            logger.info(f"Processing image: {image.filename}, Size: {img_size}, Format: {img_format}")
+            logger.info(f"Processing skin type analysis: {image.filename}, Size: {img_size}")
         except Exception as e:
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid image file: {str(e)}"
             )
         
-        # TODO: Here you would call your actual ML model
-        # For now, we return a mock response with realistic structure
-        
-        # Mock analysis results
+        # Mock analysis results for Skin Type
         analysis_results = {
+            "skin_type": "Combination",
             "confidence": 0.92,
-            "conditions": [
-                "Akne",
-                "Kuruluk"
-            ],
-            "recommendations": [
-                "Nemlendirici",
-                "Akne Kremi"
-            ],
+            "details": {
+                "oily_zone": "T-Zone",
+                "dry_zone": "Cheeks"
+            },
             "metadata": {
-                "image_format": img_format,
-                "image_size": img_size,
-                "file_size": len(contents),
                 "processed_at": datetime.now().isoformat()
             }
         }
         
-        # TODO: Replace with actual ML model inference
-        # Example:
-        # model = load_model("skin_analysis_model.h5")
-        # predictions = model.predict(preprocessed_image)
-        # analysis_results = format_predictions(predictions)
-        
         return JSONResponse(
             status_code=200,
-            content={
-                "status": "success",
-                "data": analysis_results
-            }
+            content=analysis_results
         )
         
     except HTTPException:
@@ -145,68 +121,48 @@ async def analyze_skin(image: UploadFile = File(...)):
         )
 
 
-@app.post("/analyze/base64")
-async def analyze_skin_base64(data: Dict):
+@app.post("/analyze/disease")
+async def analyze_disease(image: UploadFile = File(...)):
     """
-    Analyze skin image from base64 encoded string
-    
-    Args:
-        data: Dict with 'image' key containing base64 encoded image
-    
-    Returns:
-        Analysis results
+    Analyze skin diseases from image
     """
     try:
-        if "image" not in data:
-            raise HTTPException(status_code=400, detail="Missing 'image' field in request")
-        
-        # Decode base64 image
-        try:
-            image_data = base64.b64decode(data["image"])
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Invalid base64 image: {str(e)}")
-        
-        # Validate image size
-        max_size = 5 * 1024 * 1024  # 5MB
-        if len(image_data) > max_size:
+        # Validate file type
+        allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+        if image.content_type not in allowed_types:
             raise HTTPException(
                 status_code=400,
-                detail=f"Image size exceeds 5MB limit"
+                detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}"
             )
         
-        # Load image
-        try:
-            img = Image.open(io.BytesIO(image_data))
-            img_format = img.format
-            img_size = img.size
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Invalid image file: {str(e)}")
+        contents = await image.read()
         
-        # Mock analysis results
+        # Mock analysis results for Disease
         analysis_results = {
-            "confidence": 0.90,
-            "conditions": ["Kuruluk", "Pigmentasyon"],
-            "recommendations": ["Nemlendirici", "Güneş Koruyucu"],
+            "disease": "Acne",
+            "severity": "Moderate",
+            "confidence": 0.88,
+            "conditions": ["Papules", "Pustules"],
+            "recommendations": [
+                "Salicylic Acid Cleanser",
+                "Oil-free Moisturizer"
+            ],
             "metadata": {
-                "image_format": img_format,
-                "image_size": img_size,
                 "processed_at": datetime.now().isoformat()
             }
         }
         
         return JSONResponse(
             status_code=200,
-            content={
-                "status": "success",
-                "data": analysis_results
-            }
+            content=analysis_results
         )
         
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Error processing base64 image: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        logger.error(f"Error processing disease analysis: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )
 
 
 if __name__ == "__main__":

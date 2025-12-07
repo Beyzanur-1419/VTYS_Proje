@@ -1,19 +1,25 @@
-const BaseService = require('./BaseService');
-const UserModel = require('../models/user.model');
+const User = require('../models/User');
 
-class UserService extends BaseService {
-  constructor() {
-    super(UserModel);
+class UserService {
+  async getUserById(id) {
+    const user = await User.findByPk(id, {
+      attributes: { exclude: ['password'] },
+    });
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user;
   }
 
-  async findByEmail(email) {
-    return this.model.findOne({ where: { email } });
-  }
+  async updateUserProfile(id, data) {
+    const user = await User.findByPk(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
 
-  async comparePassword(user, password) {
-    if (!user) return false;
-    return user.comparePassword(password);
+    await user.update(data);
+    return user;
   }
 }
 
-module.exports = UserService;
+module.exports = new UserService();

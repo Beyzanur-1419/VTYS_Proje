@@ -1,34 +1,16 @@
-const { AppError } = require('../utils/errors');
+const logger = require('../utils/logger');
 
 const errorHandler = (err, req, res, next) => {
-  err.statusCode = err.statusCode || 500;
-  err.status = err.status || 'error';
+  logger.error(err.message, { stack: err.stack });
 
-  // Operational, trusted error: send message to client
-  if (err.isOperational) {
-    return res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message
-    });
-  }
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
 
-  // Programming or other unknown error: don't leak error details
-  if (process.env.NODE_ENV !== 'production') {
-    console.error('ERROR 💥', err);
-    return res.status(500).json({
-      status: 'error',
-      message: err.message,
-      stack: err.stack
-    });
-  }
-
-  console.error('ERROR 💥', err);
-  return res.status(500).json({
-    status: 'error',
-    message: 'Something went very wrong!'
+  res.status(statusCode).json({
+    success: false,
+    error: message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
   });
 };
 
-module.exports = {
-  errorHandler
-};
+module.exports = errorHandler;

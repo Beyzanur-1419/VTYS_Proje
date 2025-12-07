@@ -1,10 +1,15 @@
-module.exports = {
+﻿module.exports = {
   testEnvironment: "node",
-  testMatch: ["**/__tests__/**/*.test.js"],
+  verbose: true,
+  // setupFilesAfterEnv: ["<rootDir>/jest.setup.js"], // Commented out as file might have encoding issues
+  testMatch: [
+    "**/tests/**/*.test.js",
+  ],
+  testPathIgnorePatterns: ["/node_modules/"],
   collectCoverage: true,
   coverageDirectory: "coverage",
-  coverageReporters: ["text", "lcov", "clover"],
-  coveragePathIgnorePatterns: ["/node_modules/", "/__tests__/"],
-  setupFilesAfterEnv: ["./jest.setup.js"],
-  verbose: true,
+  coverageReporters: ["text", "lcov"],
+  coveragePathIgnorePatterns: ["/node_modules/", "/tests/", "/coverage/"],
+  transform: {},
+  testTimeout: 30000,
 };

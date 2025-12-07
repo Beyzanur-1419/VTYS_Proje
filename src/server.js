@@ -1,58 +1,42 @@
 const app = require('./app');
-const Config = require('./config/config');
-const { initializeDatabases } = require('./database');
+const config = require('./config');
+const connectPostgres = require('./database/postgresInit');
+const initMongo = require('./database/mongoInit');
+const logger = require('./utils/logger');
 
-// Initialize database connections
-async function startServer() {
+const startServer = async () => {
   try {
-    // Connect to databases (optional - if databases are not available, server can still start)
-    // Backend API can work without databases for testing
+    // Connect to Databases (Optional for dev startup)
     try {
-      const dbConnected = await initializeDatabases();
-      if (dbConnected) {
-        console.log('✅ Database connections established');
-      } else {
-        console.warn('⚠️  Database connections failed - API will run in limited mode');
-        console.warn('⚠️  Some endpoints may not work without database connections');
-      }
+      await connectPostgres();
     } catch (dbError) {
-      console.warn('⚠️  Database initialization error:', dbError.message);
-      console.warn('⚠️  Server will start but database features will be unavailable');
+      logger.warn('⚠️  PostgreSQL Connection Failed:', dbError.message);
+      logger.warn('⚠️  Server will continue without PostgreSQL. Some features may be unavailable.');
     }
 
-    // Start server
-    const server = app.listen(Config.PORT, () => {
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log(`🚀 GLOWMANCE Backend API Server`);
-      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-      console.log(`📡 Server running on: http://localhost:${Config.PORT}`);
-      console.log(`🌍 Environment: ${Config.NODE_ENV}`);
-      console.log(`📚 API Documentation: http://localhost:${Config.PORT}/api/docs`);
-      console.log(`🏥 Health Check: http://localhost:${Config.PORT}/health`);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    });
+    try {
+      await initMongo();
+    } catch (dbError) {
+      logger.warn('⚠️  MongoDB Connection Failed:', dbError.message);
+      logger.warn('⚠️  Server will continue without MongoDB. Some features may be unavailable.');
+    }
 
-    return server;
+    // Connect to Redis (optional)
+    try {
+      const redisClient = require('./config/redis');
+      await redisClient.connect();
+    } catch (redisError) {
+      logger.warn('⚠️  Redis Connection Failed:', redisError.message);
+      logger.warn('⚠️  Server will continue without Redis cache.');
+    }
+
+    app.listen(config.PORT, () => {
+      logger.info(`Server running in ${config.NODE_ENV} mode on port ${config.PORT}`);
+    });
   } catch (error) {
-    console.error('❌ Error starting server:', error);
+    logger.error('Failed to start server:', error);
     process.exit(1);
   }
-}
+};
 
-const server = startServer();
-
-// Handle unhandled rejections
-process.on('unhandledRejection', (err) => {
-  console.error('UNHANDLED REJECTION! 💥 Shutting down...');
-  console.error(err.name, err.message);
-  server.close(() => {
-    process.exit(1);
-  });
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('UNCAUGHT EXCEPTION! 💥 Shutting down...');
-  console.error(err.name, err.message);
-  process.exit(1);
-});
+startServer();

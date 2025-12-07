@@ -1,21 +1,14 @@
-const express = require("express");
+const express = require('express');
+const userController = require('../controllers/userController');
+const validate = require('../middleware/validateMiddleware');
+const { updateProfileSchema } = require('../validators/userValidator');
+const { protect } = require('../middleware/authMiddleware');
+
 const router = express.Router();
-const userController = require("../controllers/userController");
-const { authenticateToken } = require("../middleware/auth");
-const {
-  updateProfileValidator,
-  changePasswordValidator,
-} = require("../validators/user.validator");
 
-router.use(authenticateToken);
+router.use(protect);
 
-// Profil görüntüleme
-router.get("/profile", userController.getProfile);
-
-// Profil güncelleme
-router.put("/profile", updateProfileValidator, userController.updateProfile);
-
-// Şifre değiştirme
-router.put("/password", changePasswordValidator, userController.changePassword);
+router.get('/profile', userController.getProfile);
+router.put('/profile', validate(updateProfileSchema), userController.updateProfile);
 
 module.exports = router;

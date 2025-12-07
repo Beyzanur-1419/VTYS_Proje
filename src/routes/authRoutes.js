@@ -1,40 +1,82 @@
-const express = require("express");
+const express = require('express');
+const authController = require('../controllers/authController');
+const validate = require('../middleware/validateMiddleware');
+const { registerSchema, loginSchema } = require('../validators/authValidator');
+const { protect } = require('../middleware/authMiddleware');
+
 const router = express.Router();
-const authController = require("../controllers/authController");
-const { authenticateToken } = require("../middleware/auth");
-const { validationResult } = require("express-validator");
-const { AppError } = require("../utils/errors");
-const {
-  registerValidator,
-  loginValidator,
-  passwordResetValidator,
-  newPasswordValidator,
-} = require("../validators/auth.validator");
 
-// Validation middleware
-const validate = (validators) => {
-  return async (req, res, next) => {
-    // Run all validators
-    await Promise.all(validators.map((validator) => validator.run(req)));
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User created successfully
+ *       400:
+ *         description: Validation error
+ */
+router.post('/register', validate(registerSchema), authController.register);
 
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      const errorMessages = errors.array().map((err) => err.msg);
-      return next(new AppError(errorMessages.join(", "), 400));
-    }
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
+ */
+router.post('/login', validate(loginSchema), authController.login);
 
-    next();
-  };
-};
-
-// Public routes
-router.post("/register", validate(registerValidator), authController.register);
-router.post("/login", validate(loginValidator), authController.login);
-router.post("/refresh-token", authController.refresh);
-router.post("/forgot-password", validate(passwordResetValidator), authController.forgotPassword);
-router.post("/reset-password", validate(newPasswordValidator), authController.resetPassword);
-
-// Protected routes
-router.post("/logout", authenticateToken, authController.logout);
+/**
+ * @swagger
+ * /auth/me:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile
+ */
+router.get('/me', protect, authController.getMe);
 
 module.exports = router;

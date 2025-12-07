@@ -1,218 +1,103 @@
-const FileUploadService = require('../services/FileUploadService');
-const CloudinaryService = require('../services/cloudinary');
-const AIImageService = require('../services/AIImageService');
-const AnalysisHistoryService = require('../services/AnalysisHistoryService');
-const MLAnalysisService = require('../services/MLAnalysisService');
-const Config = require('../config/config');
-const { AppError } = require('../utils/errors');
-const fs = require('fs');
-const path = require('path');
+const imageService = require('../services/imageService');
+const upload = require('../utils/uploader');
 
 class UploadController {
-  constructor() {
-    this.fileUploadService = FileUploadService;
-    this.cloudinaryService = CloudinaryService;
-    this.aiImageService = new AIImageService();
-    this.analysisHistoryService = new AnalysisHistoryService();
-    this.mlAnalysisService = MLAnalysisService;
-  }
-
+  /**
+   * Upload a single image
+   * POST /api/v1/upload
+   */
   async uploadImage(req, res, next) {
-    let tempFilePath = null;
-
     try {
       if (!req.file) {
-        throw new AppError('No image file uploaded', 400);
+        return res.status(400).json({ 
+          success: false, 
+          message: 'No image file uploaded' 
+        });
       }
 
-      // Get storage provider
-      const storageProvider = this.fileUploadService.getStorageProvider();
-      let imageData = {
-        url: null,
-        cloudUrl: null,
-        publicId: null,
-        cloudProvider: storageProvider,
-        width: null,
-        height: null,
-        format: null,
-      };
-
-      // Upload to cloud storage based on provider
-      if (storageProvider === 'cloudinary' && this.cloudinaryService.isAvailable()) {
-        try {
-          tempFilePath = req.file.path;
-          const fileBuffer = req.file.buffer || await fs.readFile(req.file.path);
-
-          const cloudinaryResult = await this.cloudinaryService.uploadFromBuffer(
-            fileBuffer,
-            req.file.originalname,
-            req.file.mimetype
-          );
-
-          imageData.url = cloudinaryResult.url;
-          imageData.cloudUrl = cloudinaryResult.url;
-          imageData.publicId = cloudinaryResult.public_id;
-          imageData.width = cloudinaryResult.width;
-          imageData.height = cloudinaryResult.height;
-          imageData.format = cloudinaryResult.format;
-          
-          // Clean up temp file after cloud upload
-          await this.fileUploadService.cleanupTempFile(tempFilePath);
-        } catch (cloudError) {
-          console.error('Cloudinary upload failed, falling back to S3:', cloudError.message);
-          
-          // Fallback to S3 or local
-          if (Config.AWS_ACCESS_KEY_ID) {
-            try {
-              const s3Url = await this.fileUploadService.uploadToS3(req.file);
-              imageData.url = s3Url;
-              imageData.cloudUrl = s3Url;
-              imageData.cloudProvider = 's3';
-              await this.fileUploadService.cleanupTempFile(tempFilePath);
-            } catch (s3Error) {
-              console.error('S3 upload failed, using local:', s3Error.message);
-              imageData.url = `/uploads/${req.file.filename}`;
-              imageData.cloudProvider = 'local';
-            }
-          } else {
-            imageData.url = `/uploads/${req.file.filename}`;
-            imageData.cloudProvider = 'local';
-          }
-        }
-      } else if (storageProvider === 's3' && Config.AWS_ACCESS_KEY_ID) {
-        try {
-          tempFilePath = req.file.path;
-          const s3Url = await this.fileUploadService.uploadToS3(req.file);
-          imageData.url = s3Url;
-          imageData.cloudUrl = s3Url;
-          await this.fileUploadService.cleanupTempFile(tempFilePath);
-        } catch (s3Error) {
-          console.error('S3 upload failed, using local:', s3Error.message);
-          imageData.url = `/uploads/${req.file.filename}`;
-          imageData.cloudProvider = 'local';
-        }
-      } else {
-        // Local storage
-        imageData.url = `/uploads/${req.file.filename}`;
-      }
-
-      // Save image metadata to MongoDB
-      const aiImage = await this.aiImageService.create({
+      // Create image log in MongoDB
+      const imageLog = await imageService.createImageLog({
         userId: req.user.id,
+        filename: req.file.filename,
         originalName: req.file.originalname,
         mimeType: req.file.mimetype,
         size: req.file.size,
-        url: imageData.url,
-        cloudProvider: imageData.cloudProvider,
-        publicId: imageData.publicId,
-        cloudUrl: imageData.cloudUrl,
-        width: imageData.width,
-        height: imageData.height,
-        format: imageData.format,
-        timestamp: new Date()
+        path: req.file.path,
+        url: `/uploads/${req.file.filename}`,
       });
-
-      // Call FastAPI ML service for analysis
-      // Get image buffer before it might be cleaned up
-      let imageBuffer = null;
-      if (req.file.buffer) {
-        imageBuffer = req.file.buffer;
-      } else if (req.file.path && fs.existsSync(req.file.path)) {
-        imageBuffer = await fs.readFile(req.file.path);
-      }
-
-      let modelResults;
-      try {
-        if (imageBuffer) {
-          // Send buffer directly to ML service (best option)
-          modelResults = await this.mlAnalysisService.analyzeImageBuffer(
-            imageBuffer,
-            req.file.originalname,
-            req.file.mimetype
-          );
-        } else if (req.file.path && fs.existsSync(req.file.path)) {
-          // Send file path as fallback
-          const imagePath = path.join(process.cwd(), req.file.path);
-          modelResults = await this.mlAnalysisService.analyzeImage(imagePath);
-        } else {
-          throw new AppError('Cannot process image: no file path or buffer', 500);
-        }
-      } catch (mlError) {
-        // Log ML service error but continue with mock data as fallback
-        console.error('ML Service error:', mlError.message);
-        
-        // Fallback to mock analysis if ML service is unavailable
-        modelResults = {
-          confidence: 0.85,
-          conditions: ['Kuruluk'],
-          recommendations: ['Nemlendirici'],
-          metadata: {
-            processed_at: new Date().toISOString(),
-            fallback: true,
-            error: mlError.message
-          }
-        };
-      }
-
-      // Save analysis results to PostgreSQL database
-      let analysis;
-      try {
-        analysis = await this.analysisHistoryService.createAnalysis(
-          req.user.id,
-          aiImage._id.toString(),
-          modelResults
-        );
-      } catch (analysisError) {
-        // Log error but don't fail the entire request
-        // The image is already saved to MongoDB
-        console.error('Error saving analysis results:', analysisError.message);
-        
-        // Return response without analysis if saving fails
-        res.status(201).json({
-          status: 'success',
-          data: {
-            image: aiImage,
-            analysis: null,
-            warning: 'Image uploaded successfully but analysis results could not be saved'
-          }
-        });
-        return;
-      }
-
-      // Final cleanup of temp file if it still exists
-      if (tempFilePath && fs.existsSync(tempFilePath)) {
-        await this.fileUploadService.cleanupTempFile(tempFilePath);
-      }
 
       res.status(201).json({
-        status: 'success',
+        success: true,
         data: {
-          image: aiImage,
-          analysis
-        }
+          id: imageLog._id,
+          filename: imageLog.filename,
+          url: imageLog.url,
+          size: imageLog.size,
+          uploadedAt: imageLog.created_at,
+        },
       });
-    } catch (err) {
-      // Cleanup temp file on error
-      if (tempFilePath && fs.existsSync(tempFilePath)) {
-        await this.fileUploadService.cleanupTempFile(tempFilePath).catch(() => {});
-      }
-      next(err);
+    } catch (error) {
+      next(error);
     }
   }
 
-  // Deprecated: Use MLAnalysisService instead
-  async getModelAnalysis(imageUrl) {
-    // Fallback mock analysis
-    return {
-      confidence: 0.95,
-      conditions: ['condition1', 'condition2'],
-      recommendations: ['product1', 'product2']
-    };
+  /**
+   * Get user's uploaded images
+   * GET /api/v1/upload/list
+   */
+  async getUserImages(req, res, next) {
+    try {
+      const images = await imageService.getUserImages(req.user.id);
+
+      res.status(200).json({
+        success: true,
+        count: images.length,
+        data: images,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
 
-  // Middleware to handle file upload
-  getUploadMiddleware() {
-    return this.fileUploadService.getUploadMiddleware();
+  /**
+   * Delete an image
+   * DELETE /api/v1/upload/:id
+   */
+  async deleteImage(req, res, next) {
+    try {
+      const { id } = req.params;
+      const result = await imageService.deleteImage(id, req.user.id);
+
+      res.status(200).json({
+        success: true,
+        message: result.message,
+      });
+    } catch (error) {
+      if (error.message.includes('not found')) {
+        return res.status(404).json({
+          success: false,
+          message: error.message,
+        });
+      }
+      next(error);
+    }
+  }
+
+  /**
+   * Get image statistics
+   * GET /api/v1/upload/stats
+   */
+  async getImageStats(req, res, next) {
+    try {
+      const stats = await imageService.getUserImageStats(req.user.id);
+
+      res.status(200).json({
+        success: true,
+        data: stats,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
 }
 
