@@ -1,0 +1,334 @@
+{
+  "skinTypes": {
+    "dry": [
+      {
+        "id": "dry-001",
+        "name": "Yoğun Nemlendirici Krem",
+        "brand": "CeraVe",
+        "price": 249.99,
+        "currency": "TL",
+        "description": "Kuru ciltler için hyaluronik asit ve seramid içeren nemlendirici",
+        "image_url": "https://via.placeholder.com/300x300?text=Moisturizer",
+        "ingredients": ["Hyaluronic Acid", "Ceramides", "Glycerin"],
+        "rating": 4.7,
+        "review_count": 1250,
+        "source": "Mock Database"
+      },
+      {
+        "id": "dry-002",
+        "name": "Besleyici Yüz Yağı",
+        "brand": "The Ordinary",
+        "price": 189.99,
+        "currency": "TL",
+        "description": "Kuru ciltler için doğal yağlar içeren besleyici serum",
+        "image_url": "https://via.placeholder.com/300x300?text=Face+Oil",
+        "ingredients": ["Argan Oil", "Jojoba Oil", "Vitamin E"],
+        "rating": 4.5,
+        "review_count": 890,
+        "source": "Mock Database"
+      },
+      {
+        "id": "dry-003",
+        "name": "Hidrasyon Maskesi",
+        "brand": "Neutrogena",
+        "price": 129.99,
+        "currency": "TL",
+        "description": "Kuru ciltler için yoğun nemlendirici maske",
+        "image_url": "https://via.placeholder.com/300x300?text=Hydration+Mask",
+        "ingredients": ["Hyaluronic Acid", "Aloe Vera", "Glycerin"],
+        "rating": 4.6,
+        "review_count": 650,
+        "source": "Mock Database"
+      }
+    ],
+    "oily": [
+      {
+        "id": "oily-001",
+        "name": "Yağ Dengeleyici Tonik",
+        "brand": "La Roche-Posay",
+        "price": 199.99,
+        "currency": "TL",
+        "description": "Yağlı ciltler için gözenek sıkılaştırıcı tonik",
+        "image_url": "https://via.placeholder.com/300x300?text=Toner",
+        "ingredients": ["Salicylic Acid", "Niacinamide", "Zinc"],
+        "rating": 4.8,
+        "review_count": 1580,
+        "source": "Mock Database"
+      },
+      {
+        "id": "oily-002",
+        "name": "Mat Etkili Nemlendirici",
+        "brand": "Bioderma",
+        "price": 229.99,
+        "currency": "TL",
+        "description": "Yağlı ciltler için mat bitişli hafif nemlendirici",
+        "image_url": "https://via.placeholder.com/300x300?text=Matte+Moisturizer",
+        "ingredients": ["Niacinamide", "Zinc Gluconate", "Salicylic Acid"],
+        "rating": 4.7,
+        "review_count": 1120,
+        "source": "Mock Database"
+      },
+      {
+        "id": "oily-003",
+        "name": "Kil Maskesi",
+        "brand": "Vichy",
+        "price": 149.99,
+        "currency": "TL",
+        "description": "Yağlı ciltler için gözenek temizleyici kil maskesi",
+        "image_url": "https://via.placeholder.com/300x300?text=Clay+Mask",
+        "ingredients": ["Kaolin Clay", "Charcoal", "Tea Tree Oil"],
+        "rating": 4.6,
+        "review_count": 890,
+        "source": "Mock Database"
+      }
+    ],
+    "combination": [
+      {
+        "id": "combo-001",
+        "name": "Dengeleyici Jel Krem",
+        "brand": "Avène",
+        "price": 219.99,
+        "currency": "TL",
+        "description": "Karma ciltler için dengeleyici hafif jel krem",
+        "image_url": "https://via.placeholder.com/300x300?text=Gel+Cream",
+        "ingredients": ["Thermal Water", "Glycerin", "Niacinamide"],
+        "rating": 4.7,
+        "review_count": 980,
+        "source": "Mock Database"
+      },
+      {
+        "id": "combo-002",
+        "name": "Dual Action Serum",
+        "brand": "Paula's Choice",
+        "price": 279.99,
+        "currency": "TL",
+        "description": "Karma ciltler için T-bölge ve kuru bölgeler için çift etkili serum",
+        "image_url": "https://via.placeholder.com/300x300?text=Dual+Serum",
+        "ingredients": ["Hyaluronic Acid", "Niacinamide", "Peptides"],
+        "rating": 4.8,
+        "review_count": 1340,
+        "source": "Mock Database"
+      },
+      {
+        "id": "combo-003",
+        "name": "Hassas Temizleyici",
+        "brand": "Cetaphil",
+        "price": 159.99,
+        "currency": "TL",
+        "description": "Karma ciltler için pH dengeli yumuşak temizleyici",
+        "image_url": "https://via.placeholder.com/300x300?text=Cleanser",
+        "ingredients": ["Glycerin", "Panthenol", "Allantoin"],
+        "rating": 4.6,
+        "review_count": 1670,
+        "source": "Mock Database"
+      }
+    ],
+    "normal": [
+      {
+        "id": "normal-001",
+        "name": "Günlük Nemlendirici SPF 30",
+        "brand": "Eucerin",
+        "price": 239.99,
+        "currency": "TL",
+        "description": "Normal ciltler için güneş koruyuculu günlük bakım kremi",
+        "image_url": "https://via.placeholder.com/300x300?text=Daily+Moisturizer",
+        "ingredients": ["SPF 30", "Vitamin E", "Glycerin"],
+        "rating": 4.7,
+        "review_count": 1450,
+        "source": "Mock Database"
+      },
+      {
+        "id": "normal-002",
+        "name": "C Vitamini Serumu",
+        "brand": "Skinceuticals",
+        "price": 349.99,
+        "currency": "TL",
+        "description": "Normal ciltler için aydınlatıcı C vitamini serumu",
+        "image_url": "https://via.placeholder.com/300x300?text=Vitamin+C",
+        "ingredients": ["Vitamin C", "Ferulic Acid", "Vitamin E"],
+        "rating": 4.9,
+        "review_count": 2100,
+        "source": "Mock Database"
+      },
+      {
+        "id": "normal-003",
+        "name": "Gece Bakım Kremi",
+        "brand": "Olay",
+        "price": 179.99,
+        "currency": "TL",
+        "description": "Normal ciltler için onarıcı gece kremi",
+        "image_url": "https://via.placeholder.com/300x300?text=Night+Cream",
+        "ingredients": ["Retinol", "Peptides", "Niacinamide"],
+        "rating": 4.5,
+        "review_count": 890,
+        "source": "Mock Database"
+      }
+    ]
+  },
+  "diseases": {
+    "acne": [
+      {
+        "id": "acne-001",
+        "name": "Akne Karşıtı Serum",
+        "brand": "La Roche-Posay Effaclar",
+        "price": 289.99,
+        "currency": "TL",
+        "description": "Akne eğilimli ciltler için salisilik asit içeren serum",
+        "image_url": "https://via.placeholder.com/300x300?text=Acne+Serum",
+        "ingredients": ["Salicylic Acid", "Niacinamide", "Zinc PCA"],
+        "rating": 4.8,
+        "review_count": 1890,
+        "source": "Mock Database"
+      },
+      {
+        "id": "acne-002",
+        "name": "Spot Tedavi Kremi",
+        "brand": "Benzac",
+        "price": 149.99,
+        "currency": "TL",
+        "description": "Akne lekeleri için benzoyl peroxide içeren tedavi kremi",
+        "image_url": "https://via.placeholder.com/300x300?text=Spot+Treatment",
+        "ingredients": ["Benzoyl Peroxide 5%", "Glycerin", "Allantoin"],
+        "rating": 4.6,
+        "review_count": 1230,
+        "source": "Mock Database"
+      },
+      {
+        "id": "acne-003",
+        "name": "Yağsız Nemlendirici",
+        "brand": "Cetaphil Pro",
+        "price": 199.99,
+        "currency": "TL",
+        "description": "Akne eğilimli ciltler için yağsız nemlendirici",
+        "image_url": "https://via.placeholder.com/300x300?text=Oil+Free",
+        "ingredients": ["Niacinamide", "Hyaluronic Acid", "Allantoin"],
+        "rating": 4.7,
+        "review_count": 1560,
+        "source": "Mock Database"
+      }
+    ],
+    "eczema": [
+      {
+        "id": "eczema-001",
+        "name": "Egzama Rahatlatıcı Krem",
+        "brand": "Aveeno Dermexa",
+        "price": 269.99,
+        "currency": "TL",
+        "description": "Egzama için yulaf özü içeren rahatlatıcı krem",
+        "image_url": "https://via.placeholder.com/300x300?text=Eczema+Relief",
+        "ingredients": ["Colloidal Oatmeal", "Ceramides", "Glycerin"],
+        "rating": 4.8,
+        "review_count": 1450,
+        "source": "Mock Database"
+      },
+      {
+        "id": "eczema-002",
+        "name": "Hassas Cilt Temizleyici",
+        "brand": "Eucerin AtopiControl",
+        "price": 189.99,
+        "currency": "TL",
+        "description": "Egzamalı ciltler için sabun içermeyen temizleyici",
+        "image_url": "https://via.placeholder.com/300x300?text=Gentle+Cleanser",
+        "ingredients": ["Omega-6 Fatty Acids", "Licochalcone A", "Glycerin"],
+        "rating": 4.7,
+        "review_count": 980,
+        "source": "Mock Database"
+      },
+      {
+        "id": "eczema-003",
+        "name": "Onarıcı Bariyer Kremi",
+        "brand": "CeraVe Eczema",
+        "price": 249.99,
+        "currency": "TL",
+        "description": "Egzama için cilt bariyerini onarıcı krem",
+        "image_url": "https://via.placeholder.com/300x300?text=Barrier+Cream",
+        "ingredients": ["Ceramides", "Hyaluronic Acid", "Niacinamide"],
+        "rating": 4.9,
+        "review_count": 2340,
+        "source": "Mock Database"
+      }
+    ],
+    "rosacea": [
+      {
+        "id": "rosacea-001",
+        "name": "Rozasea Yatıştırıcı Krem",
+        "brand": "Avène Antirougeurs",
+        "price": 319.99,
+        "currency": "TL",
+        "description": "Rozasea için kızarıklık azaltıcı krem",
+        "image_url": "https://via.placeholder.com/300x300?text=Rosacea+Cream",
+        "ingredients": ["Thermal Water", "Ruscus Extract", "Dextran Sulfate"],
+        "rating": 4.8,
+        "review_count": 1120,
+        "source": "Mock Database"
+      },
+      {
+        "id": "rosacea-002",
+        "name": "Yeşil Renk Düzeltici",
+        "brand": "La Roche-Posay Rosaliac",
+        "price": 229.99,
+        "currency": "TL",
+        "description": "Rozasea kızarıklıkları için yeşil renk düzeltici krem",
+        "image_url": "https://via.placeholder.com/300x300?text=Color+Corrector",
+        "ingredients": ["Ambophenol", "Caffeine", "Niacinamide"],
+        "rating": 4.6,
+        "review_count": 890,
+        "source": "Mock Database"
+      },
+      {
+        "id": "rosacea-003",
+        "name": "Mineral Güneş Kremi SPF 50",
+        "brand": "Bioderma Sensibio",
+        "price": 279.99,
+        "currency": "TL",
+        "description": "Rozasea için mineral filtreli güneş koruyucu",
+        "image_url": "https://via.placeholder.com/300x300?text=Mineral+SPF",
+        "ingredients": ["Zinc Oxide", "Titanium Dioxide", "Vitamin E"],
+        "rating": 4.7,
+        "review_count": 1340,
+        "source": "Mock Database"
+      }
+    ],
+    "healthy": [
+      {
+        "id": "healthy-001",
+        "name": "Koruyucu Antioksidan Serum",
+        "brand": "Vichy LiftActiv",
+        "price": 299.99,
+        "currency": "TL",
+        "description": "Sağlıklı ciltler için antioksidan koruma serumu",
+        "image_url": "https://via.placeholder.com/300x300?text=Antioxidant",
+        "ingredients": ["Vitamin C", "Vitamin E", "Resveratrol"],
+        "rating": 4.7,
+        "review_count": 1560,
+        "source": "Mock Database"
+      },
+      {
+        "id": "healthy-002",
+        "name": "Hafif Günlük Krem SPF 30",
+        "brand": "Neutrogena Hydro Boost",
+        "price": 189.99,
+        "currency": "TL",
+        "description": "Sağlıklı ciltler için hafif günlük nemlendirici",
+        "image_url": "https://via.placeholder.com/300x300?text=Daily+SPF",
+        "ingredients": ["Hyaluronic Acid", "SPF 30", "Glycerin"],
+        "rating": 4.6,
+        "review_count": 1890,
+        "source": "Mock Database"
+      },
+      {
+        "id": "healthy-003",
+        "name": "Gençleştirici Gece Serumu",
+        "brand": "Olay Regenerist",
+        "price": 249.99,
+        "currency": "TL",
+        "description": "Sağlıklı ciltler için yaşlanma karşıtı gece serumu",
+        "image_url": "https://via.placeholder.com/300x300?text=Night+Serum",
+        "ingredients": ["Retinol", "Niacinamide", "Peptides"],
+        "rating": 4.8,
+        "review_count": 2100,
+        "source": "Mock Database"
+      }
+    ]
+  }
+}

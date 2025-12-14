@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Fix AuthController",
+			"type": "shell",
+			"command": "type nul > src\\controllers\\authController.js && echo const jwt = require(\"jsonwebtoken\");>src\\controllers\\authController.js && echo const Config = require(\"../config/config\");>>src\\controllers\\authController.js && echo const UserService = require(\"../services/UserService\");>>src\\controllers\\authController.js && echo const { AppError } = require(\"../utils/errors\");>>src\\controllers\\authController.js && echo const crypto = require(\"crypto\");>>src\\controllers\\authController.js && echo.>>src\\controllers\\authController.js && echo class AuthController {>>src\\controllers\\authController.js",
+			"group": "build"
+		}
+	]
+}

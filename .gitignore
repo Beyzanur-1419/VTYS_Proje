@@ -1,0 +1,21 @@
+# Env files
+.env
+.env.*
+
+# Uploads (runtime files)
+backend/uploads/
+
+# Logs
+backend/logs/
+*.log
+
+# Coverage / test outputs
+backend/coverage/
+coverage/
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
