@@ -4,8 +4,6 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
@@ -84,7 +82,10 @@ fun FaceScanningScreen(
             
             // Navigate to results screen
             Log.d("FaceScanningScreen", "Tarama tamamlandı, sonuç ekranına yönlendiriliyor...")
-            navController.navigate(Screen.SkinResult.route)
+            navController.navigate(Screen.SkinResult.route) {
+                // Clear the back stack so user can't go back to scanning
+                popUpTo(Screen.FaceScanning.route) { inclusive = true }
+            }
         }
     }
     
@@ -106,14 +107,11 @@ fun FaceScanningScreen(
                 .size(48.dp)
                 .clip(RoundedCornerShape(24.dp))
                 .background(Color.Black.copy(alpha = 0.5f))
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple()
-                ) { navController.popBackStack() },
+                .clickable { navController.popBackStack() },
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                imageVector = Icons.Default.ArrowBack,
                 contentDescription = "Back",
                 tint = Color.White,
                 modifier = Modifier.size(24.dp)
@@ -159,7 +157,7 @@ fun FaceScanningScreen(
             
             // Subtitle
             Text(
-                text = "Yapay zeka verilmiş analyz hzbr vn piglie pezel sosults hazanrlr.",
+                text = "Yapay zeka analizimiz yüz hatlarınızı inceliyor ve size özel sonuçlar hazırlıyor.",
                 style = TextStyle(
                     color = Color.White.copy(alpha = 0.7f),
                     fontSize = 14.sp,
@@ -180,7 +178,7 @@ fun FaceScanningScreen(
             
             // Progress bar
             LinearProgressIndicator(
-                progress = { progress },
+                progress = progress,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(6.dp)
@@ -193,7 +191,7 @@ fun FaceScanningScreen(
             
             // Bottom text
             Text(
-                text = "Lütfen bekleyin, bu işlem şallie paçku sennide vürkclek.",
+                text = "Lütfen bekleyin, sonuçlarınız hazırlanıyor...",
                 style = TextStyle(
                     color = Color.White.copy(alpha = 0.7f),
                     fontSize = 14.sp,

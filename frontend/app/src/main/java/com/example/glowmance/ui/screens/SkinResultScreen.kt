@@ -3,9 +3,6 @@ package com.example.glowmance.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.runtime.remember
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -227,10 +224,7 @@ fun SkinResultScreen(
                         tint = RoseGold,
                         modifier = Modifier
                             .size(31.dp)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
-                            ) { /* Bildirim tıklama olayı */ }
+                            .clickable { /* Bildirim tıklama olayı */ }
                     )
 
                     Spacer(modifier = Modifier.width(16.dp))
@@ -242,10 +236,7 @@ fun SkinResultScreen(
                         tint = RoseGold,
                         modifier = Modifier
                             .size(31.dp)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
-                            ) { onNavigateToProfile() }
+                            .clickable { onNavigateToProfile() }
                     )
                 }
             }
@@ -365,10 +356,7 @@ fun SkinResultScreen(
                             .shadow(6.dp, RoundedCornerShape(28.dp))
                             .clip(RoundedCornerShape(28.dp))
                             .background(brush = roseGoldGradient)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
-                            ) { onNewAnalysisClick() },
+                            .clickable { onNewAnalysisClick() },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -392,10 +380,7 @@ fun SkinResultScreen(
                             .shadow(6.dp, RoundedCornerShape(28.dp))
                             .clip(RoundedCornerShape(28.dp))
                             .background(brush = roseGoldGradient)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
-                            ) { onRecommendedProductsClick() },
+                            .clickable { onRecommendedProductsClick() },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -411,104 +396,18 @@ fun SkinResultScreen(
                 }
             }
             
-            // Bottom navigation bar with custom divider
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Divider with thicker part under selected icon
-                Box(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    // Base thin divider
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(0.5.dp)
-                            .background(color = RoseGold.copy(alpha = 0.7f))
-                    )
-                    
-                    // Thicker part of divider under selected icon (none selected in this screen)
-                    Box(
-                        modifier = Modifier
-                            .width(0.dp)
-                            .height(2.5.dp)
-                            .align(Alignment.TopStart)
-                            .background(color = RoseGold)
-                    )
-                }
-                
-                // Navigation icons
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    // Home icon
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToHome() }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = "Home",
-                            tint = RoseGold,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                    
-                    // History icon
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToHistory() }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_history),
-                            contentDescription = "History",
-                            tint = RoseGold,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                    
-                    // Shopping bag icon
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToShop() }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_shopping_bag),
-                            contentDescription = "Shop",
-                            tint = RoseGold,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                    
-                    // Profile icon
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToProfile() }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Profile",
-                            tint = RoseGold,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
-            }
+            // Bottom Navigation Bar
+            com.example.glowmance.ui.components.GlowmanceBottomNavigationBar(
+                selectedTab = -1, // No specific tab selected for result screen, or functionality implies 'Home'? 
+                                  // Actually, Skin Analysis is often part of Home or a separate flow. 
+                                  // Let's keep it unselected (-1) or if it's considered "Home" usage.
+                                  // Looking at the previous code: "Thicker part ... (none selected in this screen)"
+                                  // So -1 is appropriate.
+                onNavigateToHome = onNavigateToHome,
+                onNavigateToHistory = onNavigateToHistory,
+                onNavigateToShop = onNavigateToShop,
+                onNavigateToProfile = onNavigateToProfile
+            )
         }
     }
 }

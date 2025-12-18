@@ -5,9 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +45,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.runtime.remember
+import androidx.compose.ui.window.Dialog
+import androidx.compose.material3.OutlinedTextFieldDefaults
 
 // Define custom colors
 private val RoseGold = Color(0xFFBD8C7D)
@@ -96,11 +101,28 @@ fun ProfileScreen(
     onNavigateToShop: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
     onEditProfile: () -> Unit = {},
+    onUpdateProfile: (String, String, String, Int) -> Unit = { _, _, _, _ -> },
     onSettings: () -> Unit = {},
     onNotifications: () -> Unit = {},
     onHelp: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
+    var showEditDialog by remember { mutableStateOf(false) }
+
+    if (showEditDialog) {
+        EditProfileDialog(
+            currentName = userName,
+            currentSkinType = skinType,
+            currentSkinGoal = skinGoal,
+            currentAge = age,
+            onDismiss = { showEditDialog = false },
+            onSave = { name, type, goal, newAge ->
+                onUpdateProfile(name, type, goal, newAge)
+                showEditDialog = false
+            }
+        )
+    }
+
     // This Box acts as our background container
     Box(modifier = Modifier.fillMaxSize()) {
         // Background image with space theme
@@ -131,21 +153,22 @@ fun ProfileScreen(
             ) {
                 // Cilt Kimlik Kartı
                 Card(
+                    border = BorderStroke(
+                        width = 1.dp,
+                        brush = roseGoldShimmerGradient
+                    ),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFF1A1A2E)
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp, vertical = 16.dp)
                         .shadow(
                             elevation = 8.dp,
                             shape = RoundedCornerShape(20.dp)
-                        ),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF1A1A2E)
-                    ),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        brush = roseGoldShimmerGradient
-                    )
+                        )
+                        .clickable { showEditDialog = true }
                 ) {
                     Column(
                         modifier = Modifier
@@ -354,7 +377,7 @@ fun ProfileScreen(
                     ProfileMenuItem(
                         icon = R.drawable.ic_edit,
                         title = "Cilt Profilini Düzenle",
-                        onClick = onEditProfile
+                        onClick = { showEditDialog = true }
                     )
                     
                     // Bildirimler
@@ -382,10 +405,7 @@ fun ProfileScreen(
                         .height(50.dp)
                         .clip(RoundedCornerShape(25.dp))
                         .background(brush = roseGoldGradient)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onLogout() },
+                        .clickable { onLogout() },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -435,10 +455,7 @@ fun ProfileScreen(
                     // Home icon
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToHome() }
+                        modifier = Modifier.clickable { onNavigateToHome() }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_home),
@@ -451,10 +468,7 @@ fun ProfileScreen(
                     // History icon
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToHistory() }
+                        modifier = Modifier.clickable { onNavigateToHistory() }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_history),
@@ -467,10 +481,7 @@ fun ProfileScreen(
                     // Shopping bag icon
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToShop() }
+                        modifier = Modifier.clickable { onNavigateToShop() }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_shopping_bag),
@@ -483,10 +494,7 @@ fun ProfileScreen(
                     // Profile icon (selected)
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToProfile() }
+                        modifier = Modifier.clickable { onNavigateToProfile() }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_person),
@@ -511,10 +519,7 @@ fun ProfileMenuItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple()
-            ) { onClick() },
+            .clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Icon
@@ -548,11 +553,149 @@ fun ProfileMenuItem(
     }
 }
 
+
+
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
     MaterialTheme {
         ProfileScreen()
+    }
+}
+
+
+
+@Composable
+fun EditProfileDialog(
+    currentName: String,
+    currentSkinType: String,
+    currentSkinGoal: String,
+    currentAge: Int,
+    onDismiss: () -> Unit,
+    onSave: (String, String, String, Int) -> Unit
+) {
+    var name by remember { mutableStateOf(currentName) }
+    var skinType by remember { mutableStateOf(currentSkinType) }
+    var skinGoal by remember { mutableStateOf(currentSkinGoal) }
+    var ageString by remember { mutableStateOf(currentAge.toString()) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1A1A2E)
+            ),
+            border = BorderStroke(1.dp, roseGoldGradient)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Başlık
+                Text(
+                    text = "Profili Düzenle",
+                    style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold),
+                    fontFamily = RalewayFontFamily,
+                    color = RoseGold,
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+
+                // Input Fields Style
+                val textFieldColors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = RoseGold,
+                    unfocusedBorderColor = RoseGold.copy(alpha = 0.5f),
+                    focusedLabelColor = RoseGold,
+                    unfocusedLabelColor = RoseGold.copy(alpha = 0.7f),
+                    cursorColor = RoseGold,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                )
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Ad Soyad") },
+                    colors = textFieldColors,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                
+                OutlinedTextField(
+                    value = skinType,
+                    onValueChange = { skinType = it },
+                    label = { Text("Cilt Tipi (Kuru, Yağlı, Karma)") },
+                    colors = textFieldColors,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = skinGoal,
+                    onValueChange = { skinGoal = it },
+                    label = { Text("Ana Hedef (Nem, Leke, Akne)") },
+                    colors = textFieldColors,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = ageString,
+                    onValueChange = { ageString = it.filter { char -> char.isDigit() } },
+                    label = { Text("Yaş") },
+                    colors = textFieldColors,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                // Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // İptal Butonu
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                            .border(1.dp, RoseGold, RoundedCornerShape(24.dp))
+                            .clickable { onDismiss() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "İptal",
+                            color = RoseGold,
+                            fontFamily = RalewayFontFamily
+                        )
+                    }
+
+                    // Kaydet Butonu
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                            .background(roseGoldGradient, RoundedCornerShape(24.dp))
+                            .clickable { 
+                                val age = ageString.toIntOrNull() ?: currentAge
+                                onSave(name, skinType, skinGoal, age) 
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Kaydet",
+                            color = Color.White,
+                            fontFamily = RalewayFontFamily,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

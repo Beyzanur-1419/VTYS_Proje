@@ -68,108 +68,110 @@ class UserPreferences(context: Context) {
     }
     
     /**
-     * Access token'ı kaydeder
+     * Kullanıcının token bilgisini kaydeder
      */
-    fun saveAccessToken(token: String) {
+    fun saveAuthToken(token: String) {
         sharedPreferences.edit {
-            putString(KEY_ACCESS_TOKEN, token)
+            putString(KEY_AUTH_TOKEN, token)
         }
     }
-    
+
     /**
-     * Access token'ı getirir
+     * Kayıtlı token bilgisini getirir
      */
-    fun getAccessToken(): String? {
-        return sharedPreferences.getString(KEY_ACCESS_TOKEN, null)
+    fun getAuthToken(): String? {
+        return sharedPreferences.getString(KEY_AUTH_TOKEN, null)
     }
-    
+
     /**
-     * Refresh token'ı kaydeder
+     * Kullanıcı bilgilerini kaydeder
      */
-    fun saveRefreshToken(token: String) {
+    /**
+     * Kullanıcı bilgilerini kaydeder
+     */
+    fun saveUser(id: String, name: String, email: String) {
         sharedPreferences.edit {
-            putString(KEY_REFRESH_TOKEN, token)
+            putString(KEY_USER_ID, id)
+            putString(KEY_USER_NAME, name)
+            putString(KEY_USER_EMAIL, email)
         }
     }
-    
+
     /**
-     * Refresh token'ı getirir
+     * Sadece kullanıcı adını günceller
      */
-    fun getRefreshToken(): String? {
-        return sharedPreferences.getString(KEY_REFRESH_TOKEN, null)
-    }
-    
-    /**
-     * Tüm token'ları siler (logout)
-     */
-    fun clearTokens() {
-        sharedPreferences.edit {
-            remove(KEY_ACCESS_TOKEN)
-            remove(KEY_REFRESH_TOKEN)
-        }
-    }
-    
-    /**
-     * Kullanıcı adını kaydeder
-     */
-    fun saveUserName(name: String) {
+    fun updateUserName(name: String) {
         sharedPreferences.edit {
             putString(KEY_USER_NAME, name)
         }
     }
-    
+
     /**
-     * Kullanıcı adını getirir
+     * Kayıtlı kullanıcı adını getirir
      */
     fun getUserName(): String? {
         return sharedPreferences.getString(KEY_USER_NAME, null)
     }
-    
+
     /**
-     * Kullanıcı email'ini kaydeder
+     * Oturumu kapatır (Token ve kullanıcı bilgilerini siler)
      */
-    fun saveUserEmail(email: String) {
+    fun clearAuth() {
         sharedPreferences.edit {
-            putString(KEY_USER_EMAIL, email)
-        }
-    }
-    
-    /**
-     * Kullanıcı email'ini getirir
-     */
-    fun getUserEmail(): String? {
-        return sharedPreferences.getString(KEY_USER_EMAIL, null)
-    }
-    
-    /**
-     * Kullanıcı ID'sini kaydeder
-     */
-    fun saveUserId(userId: String) {
-        sharedPreferences.edit {
-            putString(KEY_USER_ID, userId)
-        }
-    }
-    
-    /**
-     * Kullanıcı ID'sini getirir
-     */
-    fun getUserId(): String? {
-        return sharedPreferences.getString(KEY_USER_ID, null)
-    }
-    
-    /**
-     * Tüm kullanıcı bilgilerini temizler (logout)
-     */
-    fun clearUserData() {
-        sharedPreferences.edit {
+            remove(KEY_AUTH_TOKEN)
+            remove(KEY_USER_ID)
             remove(KEY_USER_NAME)
             remove(KEY_USER_EMAIL)
-            remove(KEY_USER_ID)
-            remove(KEY_ACCESS_TOKEN)
-            remove(KEY_REFRESH_TOKEN)
+            // Analiz sonucunu silmek isteyip istemediğimize karar verelim
+            // Genelde çıkış yapınca her şey silinir:
+            remove(KEY_COMPLETED_FIRST_ANALYSIS)
         }
     }
     
+    /**
+     * Profil detaylarını kaydeder
+     */
+    fun saveProfileDetails(skinType: String, skinGoal: String, age: Int) {
+        sharedPreferences.edit {
+            putString(KEY_SKIN_TYPE, skinType)
+            putString(KEY_SKIN_GOAL, skinGoal)
+            putInt(KEY_AGE, age)
+        }
+    }
+
+    /**
+     * Profil detaylarını getirir (Varsayılan değerlerle)
+     */
+    fun getProfileDetails(): ProfileDetails {
+        return ProfileDetails(
+            skinType = sharedPreferences.getString(KEY_SKIN_TYPE, "Karma / Hassas") ?: "Karma / Hassas",
+            skinGoal = sharedPreferences.getString(KEY_SKIN_GOAL, "Leke Karşıtı & Nem") ?: "Leke Karşıtı & Nem",
+            age = sharedPreferences.getInt(KEY_AGE, 26)
+        )
+    }
+
+    /**
+     * Bildirim ayarlarını kaydeder
+     */
+    fun saveNotificationSettings(analysisReminder: Boolean, campaigns: Boolean, tips: Boolean) {
+        sharedPreferences.edit {
+            putBoolean(KEY_NOTIF_ANALYSIS_REMINDER, analysisReminder)
+            putBoolean(KEY_NOTIF_CAMPAIGNS, campaigns)
+            putBoolean(KEY_NOTIF_TIPS, tips)
+        }
+    }
+
+    /**
+     * Bildirim ayarlarını getirir
+     */
+    fun getNotificationSettings(): NotificationSettings {
+        return NotificationSettings(
+            analysisReminder = sharedPreferences.getBoolean(KEY_NOTIF_ANALYSIS_REMINDER, true),
+            campaigns = sharedPreferences.getBoolean(KEY_NOTIF_CAMPAIGNS, true),
+            tips = sharedPreferences.getBoolean(KEY_NOTIF_TIPS, true)
+        )
+    }
+
     companion object {
         private const val PREFERENCES_NAME = "glowmance_preferences"
         private const val KEY_COMPLETED_FIRST_ANALYSIS = "completed_first_analysis"
@@ -180,11 +182,22 @@ class UserPreferences(context: Context) {
         private const val KEY_HAS_ROSACEA = "has_rosacea"
         private const val KEY_ROSACEA_LEVEL = "rosacea_level"
         private const val KEY_IS_NORMAL = "is_normal"
-        private const val KEY_ACCESS_TOKEN = "access_token"
-        private const val KEY_REFRESH_TOKEN = "refresh_token"
+        
+        // Auth keys
+        private const val KEY_AUTH_TOKEN = "auth_token"
+        private const val KEY_USER_ID = "user_id"
         private const val KEY_USER_NAME = "user_name"
         private const val KEY_USER_EMAIL = "user_email"
-        private const val KEY_USER_ID = "user_id"
+
+        // Profile keys
+        private const val KEY_SKIN_TYPE = "skin_type"
+        private const val KEY_SKIN_GOAL = "skin_goal"
+        private const val KEY_AGE = "age"
+        
+        // Notification keys
+        private const val KEY_NOTIF_ANALYSIS_REMINDER = "notif_analysis_reminder"
+        private const val KEY_NOTIF_CAMPAIGNS = "notif_campaigns"
+        private const val KEY_NOTIF_TIPS = "notif_tips"
         
         // Singleton instance
         @Volatile
@@ -197,6 +210,18 @@ class UserPreferences(context: Context) {
         }
     }
 }
+
+data class ProfileDetails(
+    val skinType: String,
+    val skinGoal: String,
+    val age: Int
+)
+
+data class NotificationSettings(
+    val analysisReminder: Boolean,
+    val campaigns: Boolean,
+    val tips: Boolean
+)
 
 /**
  * Cilt analiz sonuçlarını temsil eden veri sınıfı

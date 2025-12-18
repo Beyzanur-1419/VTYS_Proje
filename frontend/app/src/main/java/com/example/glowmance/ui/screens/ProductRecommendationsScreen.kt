@@ -4,9 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,23 +12,30 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,12 +52,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
 import com.example.glowmance.R
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import com.example.glowmance.ui.screens.roseGoldShimmerGradient
+import com.example.glowmance.data.model.Product
+import com.example.glowmance.ui.viewmodel.ProductState
+import com.example.glowmance.ui.viewmodel.ProductViewModel
 
 // Define custom colors
 private val RoseGold = Color(0xFFBD8C7D)
@@ -87,75 +92,26 @@ private val roseGoldShimmerGradient = Brush.linearGradient(
 
 // Using system fonts temporarily
 private val RalewayFontFamily = FontFamily.SansSerif
-private val LoveloFontFamily = FontFamily.Serif
-
-// Ürün verisi için data class
-data class Product(
-    val id: Int,
-    val name: String,
-    val brand: String,
-    val imageResId: Int,
-    val rating: Float,
-    val price: String,
-    val description: String
-)
 
 @Composable
 fun ProductRecommendationsScreen(
-    userName: String = "Ayşe",
+    viewModel: ProductViewModel = viewModel(),
+    userName: String = viewModel.userName, // Get from ViewModel dynamically
     onNavigateToProfile: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToShop: () -> Unit = {},
     onNavigateToHome: () -> Unit = {}
 ) {
-    // Örnek ürün verileri
-    val productList = listOf(
-        Product(
-            id = 1,
-            name = "Nemlendirici Krem",
-            brand = "GlowCare",
-            imageResId = R.drawable.logo, // Geçici olarak logo kullanılıyor
-            rating = 4.8f,
-            price = "249,90 TL",
-            description = "Cildinizde tespit edilen kuruluk için ideal nemlendirme sağlar"
-        ),
-        Product(
-            id = 2,
-            name = "Akne Karşıtı Serum",
-            brand = "PureSkin",
-            imageResId = R.drawable.logo, // Geçici olarak logo kullanılıyor
-            rating = 4.5f,
-            price = "189,90 TL",
-            description = "Cildinizde tespit edilen akne için özel formül içerir"
-        ),
-        Product(
-            id = 3,
-            name = "Güneş Koruyucu SPF 50",
-            brand = "SunShield",
-            imageResId = R.drawable.logo, // Geçici olarak logo kullanılıyor
-            rating = 4.9f,
-            price = "159,90 TL",
-            description = "Cildinizi UV ışınlarından koruyarak lekeleri önler"
-        ),
-        Product(
-            id = 4,
-            name = "Yatıştırıcı Tonik",
-            brand = "CalmSkin",
-            imageResId = R.drawable.logo, // Geçici olarak logo kullanılıyor
-            rating = 4.6f,
-            price = "129,90 TL",
-            description = "Tespit edilen cilt hassasiyetini azaltır ve yatıştırır"
-        ),
-        Product(
-            id = 5,
-            name = "Hyaluronik Asit Serumu",
-            brand = "HydraPlus",
-            imageResId = R.drawable.logo, // Geçici olarak logo kullanılıyor
-            rating = 4.7f,
-            price = "219,90 TL",
-            description = "Cildinizin nem dengesini sağlar ve ince çizgileri azaltır"
+    val state = viewModel.productState
+    var selectedProduct by remember { mutableStateOf<Product?>(null) }
+
+    // Dialog handling
+    if (selectedProduct != null) {
+        ProductDetailDialog(
+            product = selectedProduct!!,
+            onDismiss = { selectedProduct = null }
         )
-    )
+    }
 
     // This Box acts as our background container
     Box(modifier = Modifier.fillMaxSize()) {
@@ -210,13 +166,44 @@ fun ProductRecommendationsScreen(
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
                 
-                // Product list
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(productList) { product ->
-                        ProductCard(product = product)
+                // Product list content based on state
+                Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                    when (state) {
+                        is ProductState.Loading -> {
+                            CircularProgressIndicator(
+                                color = RoseGold,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                        is ProductState.Error -> {
+                            Text(
+                                text = state.message,
+                                color = Color.White,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                        is ProductState.Empty -> {
+                            Text(
+                                text = "Şu anda önerilecek ürün bulunamadı.",
+                                color = Color.White,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                        is ProductState.Success -> {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                items(state.products) { product ->
+                                    ProductCard(
+                                        product = product,
+                                        onClick = { selectedProduct = product }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -257,10 +244,7 @@ fun ProductRecommendationsScreen(
                     // Home icon
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToHome() }
+                        modifier = Modifier.clickable { onNavigateToHome() }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Home,
@@ -273,12 +257,9 @@ fun ProductRecommendationsScreen(
                     // History icon
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToHistory() }
+                        modifier = Modifier.clickable { onNavigateToHistory() }
                     ) {
-                        Icon(
+                         Icon(
                             painter = painterResource(id = R.drawable.ic_history),
                             contentDescription = "History",
                             tint = RoseGold,
@@ -289,10 +270,7 @@ fun ProductRecommendationsScreen(
                     // Shopping bag icon (selected)
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToShop() }
+                        modifier = Modifier.clickable { onNavigateToShop() }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_shopping_bag),
@@ -305,10 +283,7 @@ fun ProductRecommendationsScreen(
                     // Profile icon
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToProfile() }
+                        modifier = Modifier.clickable { onNavigateToProfile() }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
@@ -324,23 +299,27 @@ fun ProductRecommendationsScreen(
 }
 
 @Composable
-fun ProductCard(product: Product) {
+fun ProductCard(
+    product: Product,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(150.dp)
+            .height(130.dp) // Reduced height since price is gone
             .padding(4.dp)
             .shadow(
                 elevation = 4.dp,
                 shape = RoundedCornerShape(16.dp)
-            ),
+            )
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent // Şeffaf arka plan
+            containerColor = Color.Transparent
         ),
         border = BorderStroke(
             width = 1.dp,
-            brush = roseGoldShimmerGradient // Rose gold çerçeve
+            brush = roseGoldShimmerGradient
         )
     ) {
         Row(
@@ -352,17 +331,29 @@ fun ProductCard(product: Product) {
             // Product image
             Box(
                 modifier = Modifier
-                    .size(100.dp)
+                    .size(90.dp)
                     .shadow(2.dp, CircleShape)
                     .clip(CircleShape)
                     .background(Color.White.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
+                 val finalUrl = if (product.imageUrl.isNullOrEmpty()) "" else if (product.imageUrl.startsWith("http")) product.imageUrl else "http://10.0.2.2:3001${product.imageUrl}"
+                 val painter = rememberAsyncImagePainter(
+                    model = androidx.compose.ui.platform.LocalContext.current.run {
+                        coil.request.ImageRequest.Builder(this)
+                            .data(finalUrl.takeIf { it.isNotEmpty() } ?: R.drawable.logo)
+                            .crossfade(true)
+                            .placeholder(R.drawable.logo)
+                            .error(R.drawable.logo)
+                            .build()
+                    }
+                 )
+
                 Image(
-                    painter = painterResource(id = product.imageResId),
+                    painter = painter,
                     contentDescription = "Product Image",
                     modifier = Modifier
-                        .size(80.dp)
+                        .size(70.dp)
                         .clip(CircleShape),
                     contentScale = ContentScale.Crop
                 )
@@ -370,95 +361,168 @@ fun ProductCard(product: Product) {
             
             Spacer(modifier = Modifier.width(16.dp))
             
-                // Product details
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                ) {
-                    // Product name
-                    Text(
-                        text = product.name,
-                        style = TextStyle(
-                            fontSize = 18.sp
-                        ),
+            // Product details
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                // Product name
+                Text(
+                    text = product.name,
+                    style = TextStyle(
+                        fontSize = 18.sp
+                    ),
+                    fontFamily = RalewayFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(bottom = 2.dp)
+                )
+                
+                // Brand
+                Text(
+                    text = product.brand,
+                    style = TextStyle(
+                        fontSize = 14.sp
+                    ),
+                    fontFamily = RalewayFontFamily,
+                    color = Color.White.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
+                // Description on card (truncated)
+                Text(
+                    text = product.description ?: "Detay bulunamadı.",
+                    style = TextStyle(
                         fontFamily = RalewayFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier.padding(bottom = 2.dp)
-                    )
-                    
-                    // Brand
-                    Text(
-                        text = product.brand,
-                        style = TextStyle(
-                            fontSize = 14.sp
-                        ),
-                        fontFamily = RalewayFontFamily,
-                        color = Color.White.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                    
-                    // Description - Neden almalı
-                    Text(
-                        text = product.description,
-                        style = TextStyle(
-                            fontSize = 13.sp
-                        ),
-                        fontFamily = RalewayFontFamily,
-                        color = Color.White.copy(alpha = 0.9f),
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                    
-                    // Rating and Price Row
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        // Rating
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = "Rating",
-                                tint = Color(0xFFFFD700), // Gold color for stars
-                                modifier = Modifier.size(16.dp)
-                            )
-                            
-                            Spacer(modifier = Modifier.width(4.dp))
-                            
-                            Text(
-                                text = product.rating.toString(),
-                                style = TextStyle(
-                                    fontSize = 14.sp
-                                ),
-                                fontFamily = RalewayFontFamily,
-                                color = Color.White,
-                            )
-                        }
-                        
-                        // Price with gradient
-                        Text(
-                            text = product.price,
-                            style = TextStyle(
-                                fontSize = 16.sp
-                            ),
-                            fontFamily = RalewayFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
+                        fontSize = 12.sp,
+                        color = Color.White.copy(alpha = 0.7f)
+                    ),
+                    maxLines = 2,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
+                // "Detayları gör" hint
+                Text(
+                    text = "Detayları ve içeriği gör >",
+                    style = TextStyle(
+                        fontSize = 11.sp,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                    ),
+                    color = RoseGold.copy(alpha = 0.8f)
+                )
+            }
         }
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun ProductRecommendationsScreenPreview() {
-    MaterialTheme {
-        ProductRecommendationsScreen()
+fun ProductDetailDialog(
+    product: Product,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2C))
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Close button
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.TopEnd
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White,
+                        modifier = Modifier
+                            .clickable(onClick = onDismiss)
+                            .padding(4.dp)
+                    )
+                }
+
+                // Image
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.1f))
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                     val finalUrl = if (product.imageUrl.isNullOrEmpty()) "" else if (product.imageUrl.startsWith("http")) product.imageUrl else "http://10.0.2.2:3001${product.imageUrl}"
+                     val painter = rememberAsyncImagePainter(
+                        model = androidx.compose.ui.platform.LocalContext.current.run {
+                            coil.request.ImageRequest.Builder(this)
+                                .data(finalUrl.takeIf { it.isNotEmpty() } ?: R.drawable.logo)
+                                .crossfade(true)
+                                .placeholder(R.drawable.logo)
+                                .error(R.drawable.logo)
+                                .build()
+                        }
+                     )
+                     
+                    Image(
+                        painter = painter,
+                        contentDescription = product.name,
+                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = product.name,
+                    style = TextStyle(color = RoseGold, fontSize = 20.sp, fontWeight = FontWeight.Bold),
+                    textAlign = TextAlign.Center
+                )
+                
+                Text(
+                    text = product.brand,
+                    style = TextStyle(color = Color.Gray, fontSize = 16.sp),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                // Description Section
+                Text(
+                    text = "Ürün Açıklaması:",
+                    style = TextStyle(color = RoseGold, fontSize = 14.sp, fontWeight = FontWeight.Bold),
+                    modifier = Modifier.align(Alignment.Start)
+                )
+                Text(
+                    text = product.description ?: "Açıklama bulunamadı.",
+                    style = TextStyle(color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp),
+                    modifier = Modifier.align(Alignment.Start).padding(bottom = 12.dp),
+                    lineHeight = 20.sp
+                )
+
+                // Ingredients Section
+                if (!product.ingredients.isNullOrEmpty()) {
+                     Text(
+                        text = "İçindekiler:",
+                        style = TextStyle(color = RoseGold, fontSize = 14.sp, fontWeight = FontWeight.Bold),
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+                    Text(
+                        text = product.ingredients.joinToString(", "),
+                        style = TextStyle(color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp),
+                        modifier = Modifier.align(Alignment.Start),
+                        lineHeight = 18.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
     }
 }

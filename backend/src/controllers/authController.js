@@ -50,6 +50,31 @@ class AuthController {
       next(error);
     }
   }
+
+  async changePassword(req, res, next) {
+    try {
+      const { oldPassword, newPassword } = req.body;
+      await authService.changePassword(req.user.id, oldPassword, newPassword);
+      res.status(200).json({
+        success: true,
+        message: 'Şifre başarıyla güncellendi',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async deleteAccount(req, res, next) {
+    try {
+      await authService.deleteAccount(req.user.id);
+      res.status(200).json({
+        success: true,
+        message: 'Hesap başarıyla silindi',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new AuthController();

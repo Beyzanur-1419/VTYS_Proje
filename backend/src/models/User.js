@@ -52,6 +52,21 @@ const User = sequelize.define('User', {
     defaultValue: true,
     allowNull: false,
   },
+  analysisReminder: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+    allowNull: false,
+  },
+  campaigns: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+    allowNull: false,
+  },
+  tips: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+    allowNull: false,
+  },
 }, {
   timestamps: true,
   createdAt: 'created_at',

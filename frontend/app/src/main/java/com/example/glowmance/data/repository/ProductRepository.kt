@@ -1,37 +1,47 @@
 package com.example.glowmance.data.repository
 
-import com.example.glowmance.data.network.ApiService
-import com.example.glowmance.data.network.Product
+import com.example.glowmance.data.api.RetrofitClient
+import com.example.glowmance.data.model.Product
 
-/**
- * Repository for product recommendations
- */
-class ProductRepository(
-    private val apiService: ApiService
-) {
-    suspend fun getTrendingProducts(limit: Int? = null): Result<List<Product>> {
+class ProductRepository {
+    private val api = RetrofitClient.productApi
+
+    suspend fun getRecommendations(conditions: List<String>): Result<List<Product>> {
         return try {
-            val response = apiService.getTrendingProducts(limit)
+            val conditionsString = conditions.joinToString(",")
+            val response = api.getRecommendations(conditionsString)
+            
             if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
+                Result.success(response.body()!!.data)
             } else {
-                Result.failure(Exception("Failed to get trending products: ${response.message()}"))
+                Result.failure(Exception("Ürünler yüklenemedi: ${response.message()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
-    suspend fun getProductRecommendations(
-        limit: Int? = null,
-        includeTrending: Boolean? = null
-    ): Result<List<Product>> {
+
+    suspend fun getAllProducts(): Result<List<Product>> {
         return try {
-            val response = apiService.getProductRecommendations(limit, includeTrending)
+            val response = api.getAllProducts()
+            
             if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
+                Result.success(response.body()!!.data)
             } else {
-                Result.failure(Exception("Failed to get recommendations: ${response.message()}"))
+                Result.failure(Exception("Ürünler yüklenemedi: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    suspend fun getAdvancedRecommendations(request: com.example.glowmance.data.model.AdvancedRecommendationRequest): Result<List<Product>> {
+        return try {
+            val response = api.getAdvancedRecommendations(request)
+            
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!.data)
+            } else {
+                Result.failure(Exception("Ürünler yüklenemedi: ${response.message()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)

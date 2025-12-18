@@ -1,7 +1,7 @@
 const express = require('express');
 const authController = require('../controllers/authController');
 const validate = require('../middleware/validateMiddleware');
-const { registerSchema, loginSchema } = require('../validators/authValidator');
+const { registerSchema, loginSchema, changePasswordSchema } = require('../validators/authValidator');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -78,5 +78,7 @@ router.post('/login', validate(loginSchema), authController.login);
  *         description: User profile
  */
 router.get('/me', protect, authController.getMe);
+router.post('/change-password', protect, validate(changePasswordSchema), authController.changePassword);
+router.delete('/delete-account', protect, authController.deleteAccount);
 
 module.exports = router;

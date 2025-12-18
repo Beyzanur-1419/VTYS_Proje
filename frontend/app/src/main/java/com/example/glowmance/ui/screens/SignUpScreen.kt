@@ -4,8 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Divider
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -100,8 +98,10 @@ private val LoveloFontFamily = FontFamily.Serif
 
 @Composable
 fun SignUpScreen(
-    onSignUpClick: (email: String, password: String, name: String) -> Unit = { _, _, _ -> },
-    onSignInClick: () -> Unit = {}
+    onSignUpClick: (String, String, String) -> Unit = { _, _, _ -> }, // Name, Email, Password
+    onSignInClick: () -> Unit = {},
+    isLoading: Boolean = false,
+    errorMessage: String? = null
 ) {
     // State variables
     var username by remember { mutableStateOf("") }
@@ -403,21 +403,40 @@ fun SignUpScreen(
                     .shadow(4.dp, RoundedCornerShape(28.dp))
                     .clip(RoundedCornerShape(28.dp))
                     .background(brush = roseGoldGradient)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
-                        onClick = { onSignUpClick(email, password, username) }
-                    ),
+                    .clickable(enabled = !isLoading) {
+                        if (password == confirmPassword) {
+                            onSignUpClick(username, email, password)
+                        } else {
+                            // Simple client-side validation for password match
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "SIGN UP",
-                    style = TextStyle(
-                        fontFamily = RalewayFontFamily,
-                        fontSize = 18.sp,
-                        letterSpacing = 1.sp,
-                        color = Color.White
+                if (isLoading) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp)
                     )
+                } else {
+                    Text(
+                        text = "SIGN UP",
+                        style = TextStyle(
+                            fontFamily = RalewayFontFamily,
+                            fontSize = 18.sp,
+                            letterSpacing = 1.sp,
+                            color = Color.White
+                        )
+                    )
+                }
+            }
+
+            if (errorMessage != null) {
+                Text(
+                    text = errorMessage,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(top = 8.dp),
+                    textAlign = TextAlign.Center
                 )
             }
 
@@ -465,11 +484,7 @@ fun SignUpScreen(
                         fontSize = 16.sp,
                         fontFamily = RalewayFontFamily
                     ),
-                    modifier = Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
-                        onClick = onSignInClick
-                    )
+                    modifier = Modifier.clickable(onClick = onSignInClick)
                 )
             }
         }

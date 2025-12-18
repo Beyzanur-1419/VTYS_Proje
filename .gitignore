@@ -1,21 +1,56 @@
-# Env files
+# ======================
+# Environment
+# ======================
 .env
 .env.*
 
-# Uploads (runtime files)
+# ======================
+# Uploads / runtime
+# ======================
 backend/uploads/
-
-# Logs
 backend/logs/
 *.log
 
-# Coverage / test outputs
+# ======================
+# Coverage / tests
+# ======================
 backend/coverage/
 coverage/
 
-# Node
+# ======================
+# Node.js
+# ======================
 node_modules/
 
+# ======================
 # Python
+# ======================
 __pycache__/
 *.pyc
+.venv/
+env/
+
+# ======================
+# AI / Models
+# ======================
+ai/models/
+*.h5
+*.pt
+*.pth
+
+# ======================
+# Android / Gradle (ÇOK ÖNEMLİ)
+# ======================
+.gradle/
+build/
+*.apk
+*.aab
+local.properties
+
+# ======================
+# IDE / OS
+# ======================
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

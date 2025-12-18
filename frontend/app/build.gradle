@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace 'com.example.glowmance'
-    compileSdk 36
+    compileSdk 35
 
     // Adding 16KB alignment rule support
     packagingOptions {
@@ -18,7 +18,7 @@ android {
     defaultConfig {
         applicationId "com.example.glowmance"
         minSdk 24
-        targetSdk 36
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
@@ -32,11 +32,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = '11'
+        jvmTarget = '1.8'
     }
     buildFeatures {
         compose true
@@ -46,7 +46,6 @@ android {
 dependencies {
     implementation libs.androidx.core.ktx
     implementation libs.androidx.lifecycle.runtime.ktx
-    implementation "androidx.lifecycle:lifecycle-runtime-compose:2.9.4"
     implementation libs.androidx.activity.compose
     implementation platform(libs.androidx.compose.bom)
     implementation libs.androidx.compose.ui
@@ -64,15 +63,18 @@ dependencies {
     
     // ML Kit for Face Detection (updated version for 16KB alignment)
     implementation "com.google.mlkit:face-detection:16.1.5"
-    
+
     // Retrofit for API calls
     implementation "com.squareup.retrofit2:retrofit:2.9.0"
     implementation "com.squareup.retrofit2:converter-gson:2.9.0"
     implementation "com.squareup.okhttp3:okhttp:4.12.0"
     implementation "com.squareup.okhttp3:logging-interceptor:4.12.0"
-    
+
     // Gson for JSON parsing
     implementation "com.google.code.gson:gson:2.10.1"
+
+    // Coil for Image Loading
+    implementation "io.coil-kt:coil-compose:2.4.0"
     
     testImplementation libs.junit
     androidTestImplementation libs.androidx.junit

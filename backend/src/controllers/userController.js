@@ -66,8 +66,11 @@ class UserController {
       res.status(200).json({
         notificationEnabled: user.notificationEnabled ?? true,
         emailNotifications: user.emailNotifications ?? true,
-        language: 'tr', // Varsayılan dil
-        theme: 'dark' // Varsayılan tema
+        analysisReminder: user.analysisReminder ?? true,
+        campaigns: user.campaigns ?? true,
+        tips: user.tips ?? true,
+        language: 'tr',
+        theme: 'dark'
       });
     } catch (error) {
       next(error);
@@ -76,14 +79,28 @@ class UserController {
 
   async updateSettings(req, res, next) {
     try {
-      const { notificationEnabled, emailNotifications } = req.body;
+      const {
+        notificationEnabled,
+        emailNotifications,
+        analysisReminder,
+        campaigns,
+        tips
+      } = req.body;
+
       const user = await userService.updateUserProfile(req.user.id, {
         notificationEnabled,
-        emailNotifications
+        emailNotifications,
+        analysisReminder,
+        campaigns,
+        tips
       });
+
       res.status(200).json({
         notificationEnabled: user.notificationEnabled ?? true,
         emailNotifications: user.emailNotifications ?? true,
+        analysisReminder: user.analysisReminder ?? true,
+        campaigns: user.campaigns ?? true,
+        tips: user.tips ?? true,
         language: 'tr',
         theme: 'dark'
       });

@@ -2,15 +2,12 @@ package com.example.glowmance
 
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,10 +27,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Icon
 import androidx.compose.ui.Alignment
@@ -58,11 +54,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.glowmance.data.UserPreferences
-import com.example.glowmance.data.network.NetworkModule
-import com.example.glowmance.data.network.TokenProvider
-import com.example.glowmance.data.repository.AuthRepository
 import com.example.glowmance.ui.navigation.Screen
-import kotlinx.coroutines.launch
 import com.example.glowmance.ui.screens.CameraScreen
 import com.example.glowmance.ui.screens.FaceScanningScreen
 import com.example.glowmance.ui.screens.HistoryScreen
@@ -74,14 +66,13 @@ import com.example.glowmance.ui.screens.SignUpScreen
 import com.example.glowmance.ui.screens.SkinResultScreen
 import com.example.glowmance.ui.screens.SkinConditionResult
 import com.example.glowmance.ui.theme.GlowmanceTheme
+import com.example.glowmance.ui.viewmodel.AuthViewModel
+import com.example.glowmance.ui.viewmodel.AuthState
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // TokenProvider'ı initialize et
-        TokenProvider.initialize(this)
-        
         enableEdgeToEdge()
         setContent {
             GlowmanceTheme {
@@ -131,38 +122,27 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val userPreferences = remember { UserPreferences.getInstance(context) }
-    val authRepository = remember { AuthRepository(NetworkModule.apiService) }
-    val apiService = remember { NetworkModule.apiService }
-    val coroutineScope = rememberCoroutineScope()
     
-    // Hata mesajı göstermek için helper function
-    fun showError(message: String) {
-        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-        Log.e("AppNavigation", message)
-    }
+    // Auth ViewModel
+    val authViewModel: AuthViewModel = viewModel()
     
-    fun showSuccess(message: String) {
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-        Log.d("AppNavigation", message)
-    }
-    
-    // Kullanıcı adını al (state olarak tutuluyor, güncellenebilir)
-    var userName by remember { 
-        mutableStateOf(userPreferences.getUserName() ?: "Kullanıcı")
-    }
-    
-    // Debug için navigasyon değişikliklerini logla
+    // Debug ve Navigasyon
     val navigateWithLog: (String) -> Unit = { route ->
         Log.d("Navigation", "Navigating to: $route")
         navController.navigate(route)
     }
     
-    // Başlangıç destinasyonu için kontrol
+    // Başlangıç destinasyonu
     val startDestination = remember {
-        // Kullanıcı giriş yapmış ve ilk cilt analizini tamamlamışsa SkinResult ekranından başla
-        // Aksi takdirde SignIn ekranından başla
-        if (userPreferences.hasCompletedFirstAnalysis()) {
-            Screen.SkinResult.route
+        val hasToken = userPreferences.getAuthToken() != null
+        val hasCompletedAnalysis = userPreferences.hasCompletedFirstAnalysis()
+        
+        if (hasToken) {
+             if (hasCompletedAnalysis) {
+                 Screen.SkinResult.route
+             } else {
+                 Screen.Home.route 
+             }
         } else {
             Screen.SignIn.route
         }
@@ -175,142 +155,79 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     ) {
         // Giriş ekranları
         composable(route = Screen.SignIn.route) {
+            val loginState = authViewModel.loginState
+            val errorMessage = authViewModel.errorMessage
+            
+            // Başarılı giriş durumunda yönlendirme
+            LaunchedEffect(loginState) {
+                if (loginState is AuthState.Success) {
+                    val user = (loginState as AuthState.Success).user
+                    val token = (loginState as AuthState.Success).token
+                    
+                    Log.d("Auth", "Login Successful: ${user?.email}")
+                    if (user != null && token != null) {
+                         userPreferences.saveUser(user.id, user.name, user.email)
+                         userPreferences.saveAuthToken(token)
+                    }
+
+                    authViewModel.resetState() 
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.SignIn.route) { inclusive = true }
+                    }
+                }
+            }
+            
             SignInScreen(
                 onSignInClick = { email, password ->
-                    Log.d("Navigation", "SignIn button clicked with email: $email")
-                    if (email.isBlank() || password.isBlank()) {
-                        showError("Lütfen email ve şifre girin")
-                        return@SignInScreen
-                    }
-                    
-                    coroutineScope.launch {
-                        try {
-                            Log.d("Auth", "Attempting login...")
-                            authRepository.login(email, password)
-                                .onSuccess { response ->
-                                    // Token ve kullanıcı bilgilerini kaydet
-                                    if (response.accessToken.isNotBlank()) {
-                                        userPreferences.saveAccessToken(response.accessToken)
-                                    } else {
-                                        Log.e("Auth", "AccessToken is empty!")
-                                        showError("Token alınamadı. Lütfen tekrar deneyin.")
-                                        return@launch
-                                    }
-                                    
-                                    response.refreshToken?.let { 
-                                        if (it.isNotBlank()) {
-                                            userPreferences.saveRefreshToken(it)
-                                        }
-                                    }
-                                    userPreferences.saveUserName(response.user.name)
-                                    userPreferences.saveUserEmail(response.user.email)
-                                    userPreferences.saveUserId(response.user.id)
-                                    
-                                    // Kullanıcı adını güncelle
-                                    userName = response.user.name
-                                    
-                                    Log.d("Auth", "Login successful: ${response.user.name}")
-                                    showSuccess("Hoş geldiniz, ${response.user.name}!")
-                                    
-                                    // Ana ekrana git
-                                    navController.navigate(Screen.Home.route) {
-                                        popUpTo(Screen.SignIn.route) { inclusive = true }
-                                    }
-                                }
-                                .onFailure { error ->
-                                    val errorMessage = error.message ?: "Giriş yapılamadı. Lütfen tekrar deneyin."
-                                    Log.e("Auth", "Login failed: ${error.message}", error)
-                                    showError(errorMessage)
-                                }
-                        } catch (e: Exception) {
-                            val errorMessage = "Bağlantı hatası: ${e.message ?: "Bilinmeyen hata"}"
-                            Log.e("Auth", "Login exception", e)
-                            showError(errorMessage)
-                        }
-                    }
+                    Log.d("Auth", "Login attempt: $email")
+                    authViewModel.login(email, password)
                 },
                 onForgotPasswordClick = { 
-                    Log.d("Navigation", "Forgot Password clicked")
-                    // Şifremi Unuttum ekranına yönlendir
                     navController.navigate(Screen.ForgotPassword.route)
                 },
                 onSignUpClick = { 
-                    Log.d("Navigation", "Sign Up clicked")
+                    authViewModel.resetState()
                     navController.navigate(Screen.SignUp.route)
-                }
+                },
+                isLoading = loginState is AuthState.Loading,
+                errorMessage = errorMessage
             )
         }
         
         composable(route = Screen.SignUp.route) {
-            // Gerçek SignUpScreen'i kullan
+            val registerState = authViewModel.registerState
+            val errorMessage = authViewModel.errorMessage
+            
+            // Başarılı kayıt durumunda yönlendirme
+            LaunchedEffect(registerState) {
+                if (registerState is AuthState.Success) {
+                    val user = (registerState as AuthState.Success).user
+                    val token = (registerState as AuthState.Success).token
+
+                    Log.d("Auth", "Registration Successful: ${user?.email}")
+                    if (user != null && token != null) {
+                        userPreferences.saveUser(user.id, user.name, user.email)
+                        userPreferences.saveAuthToken(token)
+                    }
+                    
+                    authViewModel.resetState()
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.SignIn.route) { inclusive = true }
+                    }
+                }
+            }
+
             SignUpScreen(
-                onSignUpClick = { email, password, name ->
-                    Log.d("Navigation", "Sign Up button clicked with email: $email, name: $name")
-                    
-                    // Validasyon
-                    if (name.isBlank()) {
-                        showError("Lütfen kullanıcı adı girin")
-                        return@SignUpScreen
-                    }
-                    if (email.isBlank()) {
-                        showError("Lütfen email girin")
-                        return@SignUpScreen
-                    }
-                    if (password.isBlank() || password.length < 6) {
-                        showError("Şifre en az 6 karakter olmalıdır")
-                        return@SignUpScreen
-                    }
-                    
-                    coroutineScope.launch {
-                        try {
-                            Log.d("Auth", "Attempting registration...")
-                            authRepository.register(email, password, name)
-                                .onSuccess { response ->
-                                    // Token ve kullanıcı bilgilerini kaydet
-                                    if (response.accessToken.isNotBlank()) {
-                                        userPreferences.saveAccessToken(response.accessToken)
-                                    } else {
-                                        Log.e("Auth", "AccessToken is empty!")
-                                        showError("Token alınamadı. Lütfen tekrar deneyin.")
-                                        return@launch
-                                    }
-                                    
-                                    response.refreshToken?.let { 
-                                        if (it.isNotBlank()) {
-                                            userPreferences.saveRefreshToken(it)
-                                        }
-                                    }
-                                    userPreferences.saveUserName(response.user.name)
-                                    userPreferences.saveUserEmail(response.user.email)
-                                    userPreferences.saveUserId(response.user.id)
-                                    
-                                    // Kullanıcı adını güncelle
-                                    userName = response.user.name
-                                    
-                                    Log.d("Auth", "Registration successful: ${response.user.name}")
-                                    showSuccess("Kayıt başarılı! Hoş geldiniz, ${response.user.name}!")
-                                    
-                                    // Kayıt başarılı olduğunda ana ekrana git
-                                    navController.navigate(Screen.Home.route) {
-                                        popUpTo(Screen.SignIn.route) { inclusive = true }
-                                    }
-                                }
-                                .onFailure { error ->
-                                    val errorMessage = error.message ?: "Kayıt yapılamadı. Lütfen tekrar deneyin."
-                                    Log.e("Auth", "Registration failed: ${error.message}", error)
-                                    showError(errorMessage)
-                                }
-                        } catch (e: Exception) {
-                            val errorMessage = "Bağlantı hatası: ${e.message ?: "Bilinmeyen hata"}"
-                            Log.e("Auth", "Registration exception", e)
-                            showError(errorMessage)
-                        }
-                    }
+                onSignUpClick = { name, email, password ->
+                    Log.d("Auth", "Register attempt: $email")
+                    authViewModel.register(name, email, password)
                 },
                 onSignInClick = { 
-                    Log.d("Navigation", "Back to SignIn clicked")
+                    authViewModel.resetState()
                     navController.popBackStack()
-                }
+                },
+                isLoading = registerState is AuthState.Loading,
+                errorMessage = errorMessage
             )
         }
         
@@ -329,16 +246,13 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .padding(16.dp)
                         .align(Alignment.TopStart)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) {
+                        .clickable {
                             Log.d("Navigation", "Back button clicked")
                             navController.popBackStack()
                         }
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Back",
                         tint = Color.White,
                         modifier = Modifier.size(28.dp)
@@ -471,10 +385,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                             .shadow(4.dp, RoundedCornerShape(28.dp))
                             .clip(RoundedCornerShape(28.dp))
                             .background(brush =  roseGoldGradient) // RoseGold
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
-                            ) {
+                            .clickable {
                                 // Şifre sıfırlama işlemi
                                 Log.d("Navigation", "Reset Password clicked")
                                 navController.popBackStack()
@@ -495,8 +406,12 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             }
         }
         
-        // Ana ekranlar
+        
+                
+                // Ana ekranlar
         composable(route = Screen.Home.route) {
+            val userName = userPreferences.getUserName() ?: "Kullanıcı"
+            
             HomeScreen(
                 userName = userName,
                 onAnalysisClick = { 
@@ -506,7 +421,29 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 onNavigateToProfile = { navigateWithLog(Screen.Profile.route) },
                 onNavigateToHistory = { navigateWithLog(Screen.History.route) },
                 onNavigateToShop = { navigateWithLog(Screen.ProductRecommendations.route) },
-                onNavigateToHome = { navigateWithLog(Screen.Home.route) }
+                onNavigateToHome = { navigateWithLog(Screen.Home.route) },
+                onSettingsClick = { navigateWithLog(Screen.Profile.route) }, // Ayarlar için şimdilik Profile yönlendir
+                onLogoutClick = {
+                    userPreferences.clearAuth()
+                    navController.navigate(Screen.SignIn.route) {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                    }
+                },
+                onNotificationClick = { notification ->
+                    Log.d("Notification", "Clicked: ${notification.title}")
+                    when {
+                        notification.title.contains("Analiz", ignoreCase = true) -> {
+                            navigateWithLog(Screen.SkinResult.route)
+                        }
+                        notification.title.contains("Ürün", ignoreCase = true) -> {
+                            navigateWithLog(Screen.ProductRecommendations.route)
+                        }
+                        else -> {
+                            // Diğer bildirimler için varsayılan davranış (örneğin detaya git veya hiçbir şey yapma)
+                            Log.d("Notification", "No specific navigation for this notification")
+                        }
+                    }
+                }
             )
         }
         
@@ -552,7 +489,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             )
             
             SkinResultScreen(
-                userName = userName,
+                userName = "Ayşe", // TODO: Gerçek kullanıcı adını kullan
                 skinConditionResult = skinConditionResult,
                 onNewAnalysisClick = { navigateWithLog(Screen.Camera.route) },
                 onRecommendedProductsClick = { navigateWithLog(Screen.ProductRecommendations.route) },
@@ -565,166 +502,98 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         
         // Diğer ekranlar için composable tanımlamaları
         composable(route = Screen.Profile.route) {
-            // Profil bilgilerini backend'den çek
-            var profileUserName by remember { mutableStateOf(userName) }
-            var skinType by remember { mutableStateOf("Karma / Hassas") }
-            var skinGoal by remember { mutableStateOf("Leke Karşıtı & Nem") }
-            var age by remember { mutableStateOf(26) }
+            // State for profile details
+            var profileDetails by remember { mutableStateOf(userPreferences.getProfileDetails()) }
+            var currentUserName by remember { mutableStateOf(userPreferences.getUserName() ?: "Kullanıcı") }
             var analysisCount by remember { mutableStateOf(0) }
-            var routineMatch by remember { mutableStateOf(85) }
             
+            // Fetch analysis count
             LaunchedEffect(Unit) {
-                coroutineScope.launch {
+                val token = userPreferences.getAuthToken()
+                if (token != null) {
                     try {
-                        val response = apiService.getUserProfile()
-                        if (response.isSuccessful && response.body() != null) {
-                            val user = response.body()!!
-                            profileUserName = user.name
-                            userPreferences.saveUserName(user.name)
-                            userName = user.name
-                            
-                            // Cilt bilgilerini güncelle
-                            user.skinType?.let { skinType = it }
-                            user.skinGoal?.let { skinGoal = it }
-                            user.age?.let { age = it }
+                        val repository = com.example.glowmance.data.repository.AnalysisRepository()
+                        val result = repository.getHistory(token)
+                        result.onSuccess { history ->
+                            analysisCount = history.size
                         }
                     } catch (e: Exception) {
-                        Log.e("ProfileScreen", "Failed to load profile", e)
-                    }
-                    
-                    // Analiz istatistiklerini çek
-                    try {
-                        val statsResponse = apiService.getAnalysisStats()
-                        if (statsResponse.isSuccessful && statsResponse.body() != null) {
-                            analysisCount = statsResponse.body()!!.totalAnalyses
-                            // Rutin uyumu hesapla (basit bir algoritma)
-                            routineMatch = when {
-                                analysisCount > 20 -> 95
-                                analysisCount > 10 -> 90
-                                analysisCount > 5 -> 85
-                                analysisCount > 0 -> 80
-                                else -> 75
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Log.e("ProfileScreen", "Failed to load stats", e)
+                        // Ignore error for count, default 0
                     }
                 }
             }
-            
+
             ProfileScreen(
-                userName = profileUserName,
-                skinType = skinType,
-                skinGoal = skinGoal,
-                age = age,
+                userName = currentUserName,
+                skinType = profileDetails.skinType,
+                skinGoal = profileDetails.skinGoal,
+                age = profileDetails.age,
                 analysisCount = analysisCount,
-                routineMatch = routineMatch,
                 onNavigateToProfile = { navigateWithLog(Screen.Profile.route) },
                 onNavigateToHistory = { navigateWithLog(Screen.History.route) },
                 onNavigateToShop = { navigateWithLog(Screen.ProductRecommendations.route) },
                 onNavigateToHome = { navigateWithLog(Screen.Home.route) },
-                onEditProfile = { 
-                    // Cilt profili güncelleme için dialog veya ekran açılabilir
-                    // Şimdilik basit bir mesaj göster
-                    showSuccess("Cilt profili düzenleme özelliği yakında eklenecek")
+                onUpdateProfile = { name, type, goal, age ->
+                    userPreferences.saveProfileDetails(type, goal, age)
+                    userPreferences.updateUserName(name)
+                    profileDetails = com.example.glowmance.data.ProfileDetails(type, goal, age)
+                    currentUserName = name
+                    android.widget.Toast.makeText(context, "Profil güncellendi", android.widget.Toast.LENGTH_SHORT).show()
                 },
-                onSettings = { 
-                    coroutineScope.launch {
-                        try {
-                            val settingsResponse = apiService.getSettings()
-                            if (settingsResponse.isSuccessful && settingsResponse.body() != null) {
-                                val settings = settingsResponse.body()!!
-                                showSuccess("Bildirimler: ${if (settings.notificationEnabled) "Açık" else "Kapalı"}\nEmail Bildirimleri: ${if (settings.emailNotifications) "Açık" else "Kapalı"}")
-                            } else {
-                                showSuccess("Ayarlar yüklenemedi")
-                            }
-                        } catch (e: Exception) {
-                            Log.e("ProfileScreen", "Failed to load settings", e)
-                            showError("Ayarlar yüklenemedi: ${e.message}")
-                        }
-                    }
-                },
-                onNotifications = { 
-                    coroutineScope.launch {
-                        try {
-                            val notificationsResponse = apiService.getNotifications()
-                            if (notificationsResponse.isSuccessful && notificationsResponse.body() != null) {
-                                val notifications = notificationsResponse.body()!!
-                                if (notifications.notifications.isEmpty()) {
-                                    showSuccess("Henüz bildiriminiz yok")
-                                } else {
-                                    showSuccess("${notifications.unreadCount} okunmamış bildiriminiz var")
-                                }
-                            } else {
-                                showSuccess("Bildirimler yüklenemedi")
-                            }
-                        } catch (e: Exception) {
-                            Log.e("ProfileScreen", "Failed to load notifications", e)
-                            showError("Bildirimler yüklenemedi: ${e.message}")
-                        }
-                    }
-                },
-                onHelp = { 
-                    showSuccess("Yardım & Destek: support@glowmance.com")
-                },
+                onSettings = { navigateWithLog(Screen.Settings.route) },
+                onNotifications = { navigateWithLog(Screen.Notifications.route) },
+                onHelp = { navigateWithLog(Screen.Help.route) },
                 onLogout = { 
-                    // Token ve kullanıcı bilgilerini temizle
-                    userPreferences.clearUserData()
-                    userName = "Kullanıcı"
-                    showSuccess("Çıkış yapıldı")
-                    // Çıkış yapıldığında giriş ekranına dön
+                    userPreferences.clearAuth()
                     navController.navigate(Screen.SignIn.route) {
                         popUpTo(navController.graph.startDestinationId) { inclusive = true }
                     }
                 }
             )
         }
-        
-        composable(route = Screen.History.route) {
-            // Analiz geçmişini backend'den çek
-            var historyList by remember { mutableStateOf<List<com.example.glowmance.data.network.AnalysisHistoryItem>>(emptyList()) }
-            var isLoading by remember { mutableStateOf(true) }
-            
-            LaunchedEffect(Unit) {
-                coroutineScope.launch {
-                    isLoading = true
-                    try {
-                        val response = apiService.getAnalysisHistory()
-                        if (response.isSuccessful && response.body() != null) {
-                            historyList = response.body()!!
-                        } else {
-                            showError("Analiz geçmişi yüklenemedi")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("HistoryScreen", "Failed to load history", e)
-                        showError("Bağlantı hatası: ${e.message}")
-                    } finally {
-                        isLoading = false
+
+        // Settings Screen
+        composable(route = Screen.Settings.route) {
+            com.example.glowmance.ui.screens.AccountSettingsScreen(
+                onBackClick = { navController.popBackStack() },
+                onLogout = {
+                    userPreferences.clearAuth()
+                    navController.navigate(Screen.SignIn.route) {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
                     }
                 }
-            }
+            )
+        }
+
+        // Notifications Screen
+        composable(route = Screen.Notifications.route) {
+            var settings by remember { mutableStateOf(userPreferences.getNotificationSettings()) }
             
+            com.example.glowmance.ui.screens.NotificationsScreen(
+                currentSettings = settings,
+                onBackClick = { navController.popBackStack() },
+                onSaveSettings = { analysis, campaigns, tips ->
+                    userPreferences.saveNotificationSettings(analysis, campaigns, tips)
+                    settings = com.example.glowmance.data.NotificationSettings(analysis, campaigns, tips)
+                }
+            )
+        }
+
+        // Help Screen
+        composable(route = Screen.Help.route) {
+            com.example.glowmance.ui.screens.HelpSupportScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        
+        composable(route = Screen.History.route) {
             HistoryScreen(
-                userName = userName,
-                historyList = historyList,
-                isLoading = isLoading,
                 onNavigateToProfile = { navigateWithLog(Screen.Profile.route) },
                 onNavigateToHistory = { navigateWithLog(Screen.History.route) },
                 onNavigateToShop = { navigateWithLog(Screen.ProductRecommendations.route) },
                 onNavigateToHome = { navigateWithLog(Screen.Home.route) },
                 onAnalysisItemClick = { historyItem -> 
                     // Geçmiş analiz detayına tıklandığında SkinResult ekranına git
-                    // Analiz sonuçlarını kaydet
-                    val result = historyItem.skinConditionResult
-                    userPreferences.saveLastSkinConditionResult(
-                        hasEczema = result.hasEczema,
-                        eczemaLevel = result.eczemaLevel,
-                        hasAcne = result.hasAcne,
-                        acneLevel = result.acneLevel,
-                        hasRosacea = result.hasRosacea,
-                        rosaceaLevel = result.rosaceaLevel,
-                        isNormal = result.isNormal
-                    )
                     navigateWithLog(Screen.SkinResult.route)
                 }
             )
@@ -737,7 +606,6 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         
         composable(route = Screen.ProductRecommendations.route) {
             ProductRecommendationsScreen(
-                userName = userName,
                 onNavigateToProfile = { navigateWithLog(Screen.Profile.route) },
                 onNavigateToHistory = { navigateWithLog(Screen.History.route) },
                 onNavigateToShop = { navigateWithLog(Screen.ProductRecommendations.route) },

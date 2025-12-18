@@ -21,7 +21,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -38,7 +38,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -56,8 +56,6 @@ import com.google.mlkit.vision.face.FaceDetectorOptions
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -188,7 +186,11 @@ fun CameraScreen(
         LaunchedEffect(key1 = true) {
             Log.d("CameraScreen", "Face detected, navigating to scanning screen")
             delay(500) // Short delay before navigation
-            navController.navigate(Screen.FaceScanning.route)
+            navController.navigate(Screen.FaceScanning.route) {
+                 popUpTo(Screen.Camera.route) { inclusive = false } // Keep camera in stack? No, probably should pop camera or scanning replaces it.
+                 // Actually, usually we don't want to go back to camera preview immediately.
+            }
+            viewModel.showCameraPreview = false // Stop preview
         }
     }
     
@@ -223,14 +225,11 @@ fun CameraScreen(
                 .size(48.dp)
                 .clip(RoundedCornerShape(24.dp))
                 .background(Color.Black.copy(alpha = 0.5f))
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple()
-                ) { navController.popBackStack() },
+                .clickable { navController.popBackStack() },
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                imageVector = Icons.Default.ArrowBack,
                 contentDescription = "Back",
                 tint = Color.White,
                 modifier = Modifier.size(24.dp)
@@ -481,14 +480,11 @@ private fun CameraPreview(
                 .size(48.dp)
                 .clip(RoundedCornerShape(24.dp))
                 .background(Color.Black.copy(alpha = 0.5f))
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple()
-                ) { onBack() },
+                .clickable { onBack() },
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                imageVector = Icons.Default.ArrowBack,
                 contentDescription = "Back",
                 tint = Color.White,
                 modifier = Modifier.size(24.dp)

@@ -39,13 +39,38 @@ class ProductController {
     try {
       const { conditions } = req.query;
       const conditionsArray = conditions ? conditions.split(',').map(c => c.trim()) : [];
-      
+
       const products = await productService.getRecommendations(conditionsArray);
-      
+
       res.status(200).json({
         success: true,
         count: products.length,
         data: products,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get advanced product recommendations (POST)
+   * POST /api/v1/products/recommendations/advanced
+   * Body: { skinType, problems: [], sensitivity, acne, careLevel }
+   */
+  async getAdvancedRecommendations(req, res, next) {
+    try {
+      const products = await productService.getAdvancedRecommendations(req.body);
+
+      res.status(200).json({
+        success: true,
+        count: products.length,
+        data: products.map(p => ({
+          urun_adi: p.name,
+          urun_tipi: p.brand, // Using brand as 'type' or category if available
+          uygun_cilt_tipi: req.body.skinType || 'Tümü', // Echoing back or analyzing
+          onerilme_nedeni: p.description, // Description explains why
+          ...p // Include full object too
+        })),
       });
     } catch (error) {
       next(error);
@@ -60,7 +85,7 @@ class ProductController {
     try {
       const limit = parseInt(req.query.limit) || 10;
       const products = await productService.getTrendingProducts(limit);
-      
+
       res.status(200).json({
         success: true,
         count: products.length,
@@ -78,7 +103,7 @@ class ProductController {
   async searchProducts(req, res, next) {
     try {
       const { q } = req.query;
-      
+
       if (!q) {
         return res.status(400).json({
           success: false,
@@ -87,7 +112,7 @@ class ProductController {
       }
 
       const products = await productService.searchProducts(q);
-      
+
       res.status(200).json({
         success: true,
         count: products.length,

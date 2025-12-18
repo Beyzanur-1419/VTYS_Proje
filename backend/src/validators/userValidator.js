@@ -14,6 +14,9 @@ const updateSkinProfileSchema = Joi.object({
 const updateSettingsSchema = Joi.object({
   notificationEnabled: Joi.boolean(),
   emailNotifications: Joi.boolean(),
+  analysisReminder: Joi.boolean(),
+  campaigns: Joi.boolean(),
+  tips: Joi.boolean(),
 });
 
 const changePasswordSchema = Joi.object({

@@ -9,7 +9,7 @@
         "currency": "TL",
         "description": "Kuru ciltler için hyaluronik asit ve seramid içeren nemlendirici",
         "image_url": "https://via.placeholder.com/300x300?text=Moisturizer",
-        "ingredients": ["Hyaluronic Acid", "Ceramides", "Glycerin"],
+        "ingredients": ["Hyaluronik Asit", "Seramidler", "Gliserin"],
         "rating": 4.7,
         "review_count": 1250,
         "source": "Mock Database"
@@ -22,7 +22,7 @@
         "currency": "TL",
         "description": "Kuru ciltler için doğal yağlar içeren besleyici serum",
         "image_url": "https://via.placeholder.com/300x300?text=Face+Oil",
-        "ingredients": ["Argan Oil", "Jojoba Oil", "Vitamin E"],
+        "ingredients": ["Argan Yağı", "Jojoba Yağı", "E Vitamini"],
         "rating": 4.5,
         "review_count": 890,
         "source": "Mock Database"
@@ -35,7 +35,7 @@
         "currency": "TL",
         "description": "Kuru ciltler için yoğun nemlendirici maske",
         "image_url": "https://via.placeholder.com/300x300?text=Hydration+Mask",
-        "ingredients": ["Hyaluronic Acid", "Aloe Vera", "Glycerin"],
+        "ingredients": ["Hyaluronik Asit", "Aloe Vera", "Gliserin"],
         "rating": 4.6,
         "review_count": 650,
         "source": "Mock Database"
@@ -50,7 +50,7 @@
         "currency": "TL",
         "description": "Yağlı ciltler için gözenek sıkılaştırıcı tonik",
         "image_url": "https://via.placeholder.com/300x300?text=Toner",
-        "ingredients": ["Salicylic Acid", "Niacinamide", "Zinc"],
+        "ingredients": ["Salisilik Asit", "Niasinamid", "Çinko"],
         "rating": 4.8,
         "review_count": 1580,
         "source": "Mock Database"
@@ -63,7 +63,7 @@
         "currency": "TL",
         "description": "Yağlı ciltler için mat bitişli hafif nemlendirici",
         "image_url": "https://via.placeholder.com/300x300?text=Matte+Moisturizer",
-        "ingredients": ["Niacinamide", "Zinc Gluconate", "Salicylic Acid"],
+        "ingredients": ["Niasinamid", "Çinko Glukonat", "Salisilik Asit"],
         "rating": 4.7,
         "review_count": 1120,
         "source": "Mock Database"
@@ -76,7 +76,7 @@
         "currency": "TL",
         "description": "Yağlı ciltler için gözenek temizleyici kil maskesi",
         "image_url": "https://via.placeholder.com/300x300?text=Clay+Mask",
-        "ingredients": ["Kaolin Clay", "Charcoal", "Tea Tree Oil"],
+        "ingredients": ["Kaolin Kili", "Kömür", "Çay Ağacı Yağı"],
         "rating": 4.6,
         "review_count": 890,
         "source": "Mock Database"
@@ -91,7 +91,7 @@
         "currency": "TL",
         "description": "Karma ciltler için dengeleyici hafif jel krem",
         "image_url": "https://via.placeholder.com/300x300?text=Gel+Cream",
-        "ingredients": ["Thermal Water", "Glycerin", "Niacinamide"],
+        "ingredients": ["Termal Su", "Gliserin", "Niasinamid"],
         "rating": 4.7,
         "review_count": 980,
         "source": "Mock Database"
@@ -104,7 +104,7 @@
         "currency": "TL",
         "description": "Karma ciltler için T-bölge ve kuru bölgeler için çift etkili serum",
         "image_url": "https://via.placeholder.com/300x300?text=Dual+Serum",
-        "ingredients": ["Hyaluronic Acid", "Niacinamide", "Peptides"],
+        "ingredients": ["Hyaluronik Asit", "Niasinamid", "Peptitler"],
         "rating": 4.8,
         "review_count": 1340,
         "source": "Mock Database"
@@ -117,7 +117,7 @@
         "currency": "TL",
         "description": "Karma ciltler için pH dengeli yumuşak temizleyici",
         "image_url": "https://via.placeholder.com/300x300?text=Cleanser",
-        "ingredients": ["Glycerin", "Panthenol", "Allantoin"],
+        "ingredients": ["Gliserin", "Pantenol", "Allantoin"],
         "rating": 4.6,
         "review_count": 1670,
         "source": "Mock Database"
@@ -132,7 +132,7 @@
         "currency": "TL",
         "description": "Normal ciltler için güneş koruyuculu günlük bakım kremi",
         "image_url": "https://via.placeholder.com/300x300?text=Daily+Moisturizer",
-        "ingredients": ["SPF 30", "Vitamin E", "Glycerin"],
+        "ingredients": ["SPF 30", "E Vitamini", "Gliserin"],
         "rating": 4.7,
         "review_count": 1450,
         "source": "Mock Database"
@@ -145,7 +145,7 @@
         "currency": "TL",
         "description": "Normal ciltler için aydınlatıcı C vitamini serumu",
         "image_url": "https://via.placeholder.com/300x300?text=Vitamin+C",
-        "ingredients": ["Vitamin C", "Ferulic Acid", "Vitamin E"],
+        "ingredients": ["C Vitamini", "Ferulik Asit", "E Vitamini"],
         "rating": 4.9,
         "review_count": 2100,
         "source": "Mock Database"
@@ -158,7 +158,7 @@
         "currency": "TL",
         "description": "Normal ciltler için onarıcı gece kremi",
         "image_url": "https://via.placeholder.com/300x300?text=Night+Cream",
-        "ingredients": ["Retinol", "Peptides", "Niacinamide"],
+        "ingredients": ["Retinol", "Peptitler", "Niasinamid"],
         "rating": 4.5,
         "review_count": 890,
         "source": "Mock Database"
@@ -175,7 +175,7 @@
         "currency": "TL",
         "description": "Akne eğilimli ciltler için salisilik asit içeren serum",
         "image_url": "https://via.placeholder.com/300x300?text=Acne+Serum",
-        "ingredients": ["Salicylic Acid", "Niacinamide", "Zinc PCA"],
+        "ingredients": ["Salisilik Asit", "Niasinamid", "Çinko PCA"],
         "rating": 4.8,
         "review_count": 1890,
         "source": "Mock Database"
@@ -188,7 +188,7 @@
         "currency": "TL",
         "description": "Akne lekeleri için benzoyl peroxide içeren tedavi kremi",
         "image_url": "https://via.placeholder.com/300x300?text=Spot+Treatment",
-        "ingredients": ["Benzoyl Peroxide 5%", "Glycerin", "Allantoin"],
+        "ingredients": ["Benzoyl Peroksit %5", "Gliserin", "Allantoin"],
         "rating": 4.6,
         "review_count": 1230,
         "source": "Mock Database"
@@ -201,7 +201,7 @@
         "currency": "TL",
         "description": "Akne eğilimli ciltler için yağsız nemlendirici",
         "image_url": "https://via.placeholder.com/300x300?text=Oil+Free",
-        "ingredients": ["Niacinamide", "Hyaluronic Acid", "Allantoin"],
+        "ingredients": ["Niasinamid", "Hyaluronik Asit", "Allantoin"],
         "rating": 4.7,
         "review_count": 1560,
         "source": "Mock Database"
@@ -216,7 +216,7 @@
         "currency": "TL",
         "description": "Egzama için yulaf özü içeren rahatlatıcı krem",
         "image_url": "https://via.placeholder.com/300x300?text=Eczema+Relief",
-        "ingredients": ["Colloidal Oatmeal", "Ceramides", "Glycerin"],
+        "ingredients": ["Kolloidal Yulaf", "Seramidler", "Gliserin"],
         "rating": 4.8,
         "review_count": 1450,
         "source": "Mock Database"
@@ -229,7 +229,7 @@
         "currency": "TL",
         "description": "Egzamalı ciltler için sabun içermeyen temizleyici",
         "image_url": "https://via.placeholder.com/300x300?text=Gentle+Cleanser",
-        "ingredients": ["Omega-6 Fatty Acids", "Licochalcone A", "Glycerin"],
+        "ingredients": ["Omega-6 Yağ Asitleri", "Licochalcone A", "Gliserin"],
         "rating": 4.7,
         "review_count": 980,
         "source": "Mock Database"
@@ -242,7 +242,7 @@
         "currency": "TL",
         "description": "Egzama için cilt bariyerini onarıcı krem",
         "image_url": "https://via.placeholder.com/300x300?text=Barrier+Cream",
-        "ingredients": ["Ceramides", "Hyaluronic Acid", "Niacinamide"],
+        "ingredients": ["Seramidler", "Hyaluronik Asit", "Niasinamid"],
         "rating": 4.9,
         "review_count": 2340,
         "source": "Mock Database"
@@ -257,7 +257,7 @@
         "currency": "TL",
         "description": "Rozasea için kızarıklık azaltıcı krem",
         "image_url": "https://via.placeholder.com/300x300?text=Rosacea+Cream",
-        "ingredients": ["Thermal Water", "Ruscus Extract", "Dextran Sulfate"],
+        "ingredients": ["Termal Su", "Ruscus Özü", "Dekstran Sülfat"],
         "rating": 4.8,
         "review_count": 1120,
         "source": "Mock Database"
@@ -270,7 +270,7 @@
         "currency": "TL",
         "description": "Rozasea kızarıklıkları için yeşil renk düzeltici krem",
         "image_url": "https://via.placeholder.com/300x300?text=Color+Corrector",
-        "ingredients": ["Ambophenol", "Caffeine", "Niacinamide"],
+        "ingredients": ["Ambophenol", "Kafein", "Niasinamid"],
         "rating": 4.6,
         "review_count": 890,
         "source": "Mock Database"
@@ -283,7 +283,7 @@
         "currency": "TL",
         "description": "Rozasea için mineral filtreli güneş koruyucu",
         "image_url": "https://via.placeholder.com/300x300?text=Mineral+SPF",
-        "ingredients": ["Zinc Oxide", "Titanium Dioxide", "Vitamin E"],
+        "ingredients": ["Çinko Oksit", "Titanyum Dioksit", "E Vitamini"],
         "rating": 4.7,
         "review_count": 1340,
         "source": "Mock Database"
@@ -298,7 +298,7 @@
         "currency": "TL",
         "description": "Sağlıklı ciltler için antioksidan koruma serumu",
         "image_url": "https://via.placeholder.com/300x300?text=Antioxidant",
-        "ingredients": ["Vitamin C", "Vitamin E", "Resveratrol"],
+        "ingredients": ["C Vitamini", "E Vitamini", "Resveratrol"],
         "rating": 4.7,
         "review_count": 1560,
         "source": "Mock Database"
@@ -311,7 +311,7 @@
         "currency": "TL",
         "description": "Sağlıklı ciltler için hafif günlük nemlendirici",
         "image_url": "https://via.placeholder.com/300x300?text=Daily+SPF",
-        "ingredients": ["Hyaluronic Acid", "SPF 30", "Glycerin"],
+        "ingredients": ["Hyaluronik Asit", "SPF 30", "Gliserin"],
         "rating": 4.6,
         "review_count": 1890,
         "source": "Mock Database"
@@ -324,7 +324,7 @@
         "currency": "TL",
         "description": "Sağlıklı ciltler için yaşlanma karşıtı gece serumu",
         "image_url": "https://via.placeholder.com/300x300?text=Night+Serum",
-        "ingredients": ["Retinol", "Niacinamide", "Peptides"],
+        "ingredients": ["Retinol", "Niasinamid", "Peptitler"],
         "rating": 4.8,
         "review_count": 2100,
         "source": "Mock Database"

@@ -2,607 +2,368 @@ package com.example.glowmance.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.expandVertically
-import androidx.compose.runtime.remember
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.foundation.border
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
 import com.example.glowmance.R
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.example.glowmance.data.model.AnalysisHistoryItem
+import com.example.glowmance.ui.viewmodel.HistoryState
+import com.example.glowmance.ui.viewmodel.HistoryViewModel
 
 // Define custom colors
 private val RoseGold = Color(0xFFBD8C7D)
 private val RoseGoldLight = Color(0xFFE0C1B3)
-private val RoseGoldDark = Color(0xFF9A6959)
-private val RoseGoldShimmer1 = Color(0xFFE0C1B3)
-private val RoseGoldShimmer2 = Color(0xFFD4A599)
-private val RoseGoldShimmer3 = Color(0xFFBD8C7D)
-private val RoseGoldShimmer4 = Color(0xFFC9917F)
-private val RoseGoldShimmer5 = Color(0xFF9A6959)
+private val DarkBackground = Color(0xFF1E1E1E) // Fallback if image fails
+private val CardBackground = Color(0xFF2C2C2C).copy(alpha = 0.8f)
 
-// Define gradient brushes
 private val roseGoldGradient = Brush.linearGradient(
-    colors = listOf(RoseGoldLight, RoseGold, RoseGoldDark),
+    colors = listOf(RoseGoldLight, RoseGold),
     start = Offset(0f, 0f),
     end = Offset(100f, 100f)
 )
 
-private val roseGoldShimmerGradient = Brush.linearGradient(
-    colors = listOf(
-        RoseGoldShimmer1,
-        RoseGoldShimmer2,
-        RoseGoldShimmer3,
-        RoseGoldShimmer4,
-        RoseGoldShimmer5,
-        RoseGoldShimmer4,
-        RoseGoldShimmer3,
-        RoseGoldShimmer2
-    )
-)
-
-// Using system fonts temporarily
-private val RalewayFontFamily = FontFamily.SansSerif
-private val LoveloFontFamily = FontFamily.Serif
-
-// Geçmiş analiz verisi için data class
-data class SkinAnalysisHistory(
-    val id: Int,
-    val date: Date,
-    val skinConditionResult: SkinConditionResult,
-    val imageResId: Int = R.drawable.skinresult, // Geçici olarak varsayılan resim
-    val score: Int = 0 // Puan göstergesi için eklendi
-)
-
 @Composable
 fun HistoryScreen(
-    userName: String = "Ayşe",
-    historyList: List<com.example.glowmance.data.network.AnalysisHistoryItem> = emptyList(),
-    isLoading: Boolean = false,
-    onNavigateToProfile: () -> Unit = {},
-    onNavigateToHistory: () -> Unit = {},
-    onNavigateToShop: () -> Unit = {},
-    onNavigateToHome: () -> Unit = {},
-    onAnalysisItemClick: (SkinAnalysisHistory) -> Unit = {}
+    viewModel: HistoryViewModel = viewModel(),
+    onNavigateToProfile: () -> Unit,
+    onNavigateToHistory: () -> Unit,
+    onNavigateToShop: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    onAnalysisItemClick: (AnalysisHistoryItem) -> Unit = {}
 ) {
-    // Backend'den gelen veriyi SkinAnalysisHistory formatına dönüştür
-    val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-    val dateFormatOutput = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-    
-    val convertedHistoryList = historyList.map { item ->
-        val date = try {
-            dateFormat.parse(item.createdAt) ?: Date()
-        } catch (e: Exception) {
-            Date()
-        }
-        
-        // Puan hesaplama (basit bir algoritma)
-        val score = when {
-            item.isNormal == true -> 95
-            !(item.hasEczema ?: false) && !(item.hasAcne ?: false) && !(item.hasRosacea ?: false) -> 90
-            (item.hasEczema ?: false) && (item.hasAcne ?: false) -> 70
-            (item.hasEczema ?: false) || (item.hasAcne ?: false) || (item.hasRosacea ?: false) -> 80
-            else -> 75
-        }
-        
-        SkinAnalysisHistory(
-            id = item.id.toIntOrNull() ?: 0,
-            date = date,
-            skinConditionResult = SkinConditionResult(
-                hasEczema = item.hasEczema ?: false,
-                hasAcne = item.hasAcne ?: false,
-                hasRosacea = item.hasRosacea ?: false,
-                isNormal = item.isNormal ?: false
-            ),
-            imageResId = R.drawable.skinresult,
-            score = score
-        )
-    }
+    val state = viewModel.historyState
 
-    // This Box acts as our background container
     Box(modifier = Modifier.fillMaxSize()) {
-        // Background image with space theme
+        // Background Image
         Image(
             painter = painterResource(id = R.drawable.background_image),
             contentDescription = "Background",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-        
-        // Content column
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            
-            // Main content area - Yeni Tasarım
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(vertical = 2.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // Başlık
-                Text(
-                    text = "Cilt Gelişim Yolculuğun",
-                    style = TextStyle(
-                        fontSize = 24.sp,
-                        textAlign = TextAlign.Center,
-                        letterSpacing = 0.5.sp,
-                        brush = roseGoldShimmerGradient
-                    ),
-                    fontFamily = RalewayFontFamily,
+            // Header
+            Text(
+                text = "Cilt Gelişim Yolculuğun",
+                style = TextStyle(
+                    color = RoseGold,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 24.dp,bottom = 24.dp)
-                )
-                
-                // Büyük Değişim Kartı
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .shadow(
-                            elevation = 8.dp,
-                            shape = RoundedCornerShape(20.dp)
-                        ),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF1A1A2E)
-                    ),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        brush = roseGoldShimmerGradient
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Büyük Değişim Başlık
-                        Text(
-                            text = "Büyük Değişim",
-                            style = TextStyle(
-                                fontSize = 18.sp,
-                                textAlign = TextAlign.Center
-                            ),
-                            fontFamily = RalewayFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = RoseGoldLight,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                        
-                        // Öncesi ve Sonrası Görselleri
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Başlangıç Görsel
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(100.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .border(
-                                            width = 2.dp,
-                                            color = RoseGold,
-                                            shape = RoundedCornerShape(10.dp)
-                                        )
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.skinresult),
-                                        contentDescription = "Öncesi",
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
-                                
-                                Text(
-                                    text = "Başlangıç",
-                                    style = TextStyle(fontSize = 14.sp),
-                                    fontFamily = RalewayFontFamily,
-                                    color = RoseGold,
-                                    modifier = Modifier.padding(top = 4.dp)
-                                )
-                            }
-                            
-                            // Ok İşareti
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_arrow_forward),
-                                contentDescription = "İlerleme",
-                                tint = RoseGold,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            
-                            // Bugün Görsel
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(100.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .border(
-                                            width = 2.dp,
-                                            color = RoseGold,
-                                            shape = RoundedCornerShape(10.dp)
-                                        )
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.skinresult),
-                                        contentDescription = "Sonrası",
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
-                                
-                                Text(
-                                    text = "Bugün",
-                                    style = TextStyle(fontSize = 14.sp),
-                                    fontFamily = RalewayFontFamily,
-                                    color = RoseGold,
-                                    modifier = Modifier.padding(top = 4.dp)
-                                )
-                            }
-                        }
+                    textAlign = TextAlign.Center
+                ),
+                modifier = Modifier.padding(top = 16.dp, bottom = 24.dp)
+            )
+
+            // Content based on state
+            when (state) {
+                is HistoryState.Loading -> {
+                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                         CircularProgressIndicator(color = RoseGold)
+                     }
+                }
+                is HistoryState.Error -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = state.message, color = Color.White)
                     }
                 }
-                
-                // Analiz Zaman Çizelgesi
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 24.dp, start = 16.dp, end = 16.dp),
-                    horizontalAlignment = Alignment.Start
-                ) {
-                    // Zaman Çizelgesi Başlık
+                is HistoryState.Empty -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = "Henüz bir analiz geçmişiniz bulunmamaktadır.", color = Color.White)
+                    }
+                }
+                is HistoryState.Success -> {
+                    val historyList = state.history
+                    
+                    // Comparison Card (Big Change)
+                    // Only show if we have at least 1 item to show something, ideal is 2
+                    if (historyList.isNotEmpty()) {
+                        val start = historyList.last() // Oldest
+                        val current = historyList.first() // Newest
+                         
+                         ComparisonCard(start, current)
+                         Spacer(modifier = Modifier.height(24.dp))
+                    }
+                    
+                    // Timeline Title
                     Text(
                         text = "Cilt Analiz Geçmişi",
                         style = TextStyle(
+                            color = RoseGoldLight,
                             fontSize = 18.sp,
-                            brush = roseGoldShimmerGradient
+                            fontWeight = FontWeight.Bold
                         ),
-                        fontFamily = RalewayFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    
-                    // Zaman Çizelgesi
-                    if (isLoading) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Yükleniyor...",
-                                color = Color.White,
-                                fontSize = 16.sp
-                            )
-                        }
-                    } else if (convertedHistoryList.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Henüz analiz geçmişi yok",
-                                color = Color.White.copy(alpha = 0.7f),
-                                fontSize = 16.sp
-                            )
-                        }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(0.dp)
-                        ) {
-                            items(convertedHistoryList) { historyItem ->
-                                TimelineItem(
-                                    historyItem = historyItem,
-                                    onClick = { onAnalysisItemClick(historyItem) }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // Bottom navigation bar with custom divider
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Divider with thicker part under selected icon
-                Box(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    // Base thin divider
-                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(0.5.dp)
-                            .background(color = RoseGold.copy(alpha = 0.7f))
+                            .padding(bottom = 16.dp)
                     )
                     
-                    // Thicker part of divider under selected icon (History selected in this screen)
-                    Box(
-                        modifier = Modifier
-                            .width(80.dp)
-                            .height(2.5.dp)
-                            .align(Alignment.CenterStart)
-                            .padding(start = 80.dp)
-                            .background(color = RoseGold)
-                    )
-                }
-                
-                // Navigation icons
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    // Home icon
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToHome() }
+                    // Timeline List
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                            .padding(bottom = 80.dp) // Bottom padding for nav bar
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_home),
-                            contentDescription = "Home",
-                            tint = RoseGold,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                    
-                    // History icon (selected)
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToHistory() }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_history),
-                            contentDescription = "History",
-                            tint = RoseGold,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                    
-                    // Shopping bag icon
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToShop() }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_shopping_bag),
-                            contentDescription = "Shop",
-                            tint = RoseGold,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                    
-                    // Profile icon
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToProfile() }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_person),
-                            contentDescription = "Profile",
-                            tint = RoseGold,
-                            modifier = Modifier.size(28.dp)
-                        )
+                        itemsIndexed(historyList) { index, item ->
+                             TimelineItem(
+                                 item = item, 
+                                 isLast = index == historyList.lastIndex,
+                                 viewModel = viewModel,
+                                 onClick = { onAnalysisItemClick(item) }
+                             )
+                        }
                     }
                 }
             }
         }
+        
+        // Bottom Navigation Bar
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+        ) {
+             com.example.glowmance.ui.components.GlowmanceBottomNavigationBar(
+                 selectedTab = 1, // History
+                 onNavigateToHome = onNavigateToHome,
+                 onNavigateToHistory = onNavigateToHistory,
+                 onNavigateToShop = onNavigateToShop,
+                 onNavigateToProfile = onNavigateToProfile
+             )
+        }
+    }
+}
+
+@Composable
+fun ComparisonCard(start: AnalysisHistoryItem, current: AnalysisHistoryItem) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        border = androidx.compose.foundation.BorderStroke(1.dp, RoseGold.copy(alpha = 0.5f))
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Büyük Değişim",
+                style = TextStyle(
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                ),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AnalysisImageCircle(start.imageUrl, "Başlangıç")
+                
+                Icon(
+                    imageVector = Icons.Default.ArrowForward,
+                    contentDescription = "Change",
+                    tint = RoseGold,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                
+                AnalysisImageCircle(current.imageUrl, "Bugün")
+            }
+        }
+    }
+}
+
+@Composable
+fun AnalysisImageCircle(imageUrl: String?, label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .size(70.dp)
+                .border(1.dp, RoseGold, CircleShape)
+                .padding(4.dp)
+                .clip(CircleShape)
+        ) {
+             val painter = if (imageUrl.isNullOrEmpty()) {
+                 painterResource(id = R.drawable.skinresult) // Placeholder
+             } else {
+                 val finalUrl = if (imageUrl.startsWith("http")) imageUrl else "http://10.52.210.183:3001$imageUrl"
+                 rememberAsyncImagePainter(model = finalUrl)
+             }
+             
+            Image(
+                painter = painter,
+                contentDescription = label,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
+        Text(
+            text = label,
+            style = TextStyle(color = Color.Gray, fontSize = 12.sp),
+            modifier = Modifier.padding(top = 4.dp)
+        )
     }
 }
 
 @Composable
 fun TimelineItem(
-    historyItem: SkinAnalysisHistory,
-    onClick: () -> Unit = {}
+    item: AnalysisHistoryItem, 
+    isLast: Boolean, 
+    viewModel: HistoryViewModel,
+    onClick: () -> Unit
 ) {
-    val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale("tr"))
-    val shortDateFormat = SimpleDateFormat("dd MMM yyyy", Locale("tr"))
-    val formattedDate = shortDateFormat.format(historyItem.date)
-    
-    // Cilt durumuna göre özet metin oluştur
-    val conditionSummary = when {
-        historyItem.skinConditionResult.isNormal -> "Normal cilt durumu"
-        historyItem.skinConditionResult.hasEczema && historyItem.skinConditionResult.hasAcne -> "Egzama ve Akne tespit edildi"
-        historyItem.skinConditionResult.hasEczema -> "Egzama tespit edildi"
-        historyItem.skinConditionResult.hasAcne -> "Akne seviyesinde düşüş"
-        historyItem.skinConditionResult.hasRosacea -> "İlk Analiz"
-        else -> "Nem oranı arttı"
+    val score = viewModel.calculateScore(item)
+    val scoreColor = when {
+        score >= 90 -> Color(0xFF4CAF50) // Green
+        score >= 75 -> Color(0xFFFF9800) // Orange
+        else -> Color(0xFFF44336) // Red
     }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 16.dp)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple()
-            ) { onClick() },
-        verticalAlignment = Alignment.Top
+            .height(80.dp)
+            .clickable(onClick = onClick)
     ) {
-        // Sol taraf - Zaman çizgisi
-        Box(
-            modifier = Modifier
-                .width(40.dp)
-                .height(80.dp),
-            contentAlignment = Alignment.TopCenter
+        // Timeline Line Column
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.width(40.dp)
         ) {
-            // Dikey çizgi
+            // Dot
             Box(
                 modifier = Modifier
-                    .width(2.dp)
-                    .height(80.dp)
-                    .background(RoseGold.copy(alpha = 0.5f))
-            )
-            
-            // Daire
-            Box(
-                modifier = Modifier
-                    .size(16.dp)
+                    .size(12.dp)
                     .clip(CircleShape)
                     .background(RoseGold)
             )
+            // Line
+            if (!isLast) {
+                Box(
+                    modifier = Modifier
+                        .width(2.dp)
+                        .fillMaxHeight()
+                        .background(RoseGold.copy(alpha = 0.5f))
+                )
+            }
         }
         
-        // Sağ taraf - Analiz kartı
+        // Card Content
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp),
+                .weight(1f)
+                .padding(bottom = 16.dp, end = 8.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF1A1A2E).copy(alpha = 0.8f)
-            ),
-            border = BorderStroke(
-                width = 1.dp,
-                color = RoseGold.copy(alpha = 0.5f)
-            )
+            colors = CardDefaults.cardColors(containerColor = CardBackground),
+            border = androidx.compose.foundation.BorderStroke(1.dp, RoseGold.copy(alpha = 0.3f))
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Küçük resim
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                ) {
-                    Image(
-                        painter = painterResource(id = historyItem.imageResId),
-                        contentDescription = "Analiz Resmi",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-                
-                // Tarih ve durum
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 12.dp)
-                ) {
-                    Text(
-                        text = "$formattedDate - ${conditionSummary}",
-                        style = TextStyle(fontSize = 14.sp),
-                        fontFamily = RalewayFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.White
-                    )
-                }
-                
-                // Puan göstergesi
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(
-                            when {
-                                historyItem.score >= 90 -> Color(0xFF4CAF50) // Yeşil
-                                historyItem.score >= 80 -> Color(0xFFFFA726) // Turuncu
-                                else -> Color(0xFFE57373) // Kırmızı
-                            }
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = historyItem.score.toString(),
-                        style = TextStyle(fontSize = 14.sp),
-                        fontFamily = RalewayFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
+                 Row(verticalAlignment = Alignment.CenterVertically) {
+                     // Thumbnail
+                      Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .border(1.dp, RoseGold, CircleShape)
+                    ) {
+                        val finalUrl = if (item.imageUrl.isNullOrEmpty()) "" else if (item.imageUrl.startsWith("http")) item.imageUrl else "http://10.52.210.183:3001${item.imageUrl}"
+                        val painter = if (finalUrl.isEmpty()) painterResource(id = R.drawable.skinresult) else rememberAsyncImagePainter(model = finalUrl)
+                        Image(
+                            painter = painter,
+                            contentDescription = "Thumb",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.width(12.dp))
+                    
+                    Column {
+                        Text(
+                            text = viewModel.formatDate(item.createdAt),
+                            style = TextStyle(color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        )
+                        Text(
+                            text = viewModel.generateSummary(item), 
+                            style = TextStyle(color = Color.White.copy(alpha = 0.9f), fontSize = 10.sp),
+                            maxLines = 2
+                        )
+                    }
+                 }
+                 
+                 // Score Badge
+                 Box(
+                     modifier = Modifier
+                         .size(32.dp)
+                         .clip(RoundedCornerShape(8.dp))
+                         .background(scoreColor),
+                     contentAlignment = Alignment.Center
+                 ) {
+                     Text(
+                         text = score.toString(),
+                         style = TextStyle(color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                     )
+                 }
             }
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun HistoryScreenPreview() {
-    MaterialTheme {
-        HistoryScreen()
-    }
-}

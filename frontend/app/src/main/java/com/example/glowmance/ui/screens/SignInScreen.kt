@@ -4,8 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.foundation.border
 import androidx.compose.material3.Divider
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -101,9 +100,11 @@ private val LoveloFontFamily = FontFamily.Serif
 
 @Composable
 fun SignInScreen(
-    onSignInClick: (email: String, password: String) -> Unit = { _, _ -> },
+    onSignInClick: (String, String) -> Unit = { _, _ -> }, // Email, Password
     onForgotPasswordClick: () -> Unit = {},
-    onSignUpClick: () -> Unit = {}
+    onSignUpClick: () -> Unit = {},
+    isLoading: Boolean = false,
+    errorMessage: String? = null
 ) {
     // State variables
     var email by remember { mutableStateOf("") }
@@ -333,22 +334,54 @@ fun SignInScreen(
                     .shadow(4.dp, RoundedCornerShape(28.dp))
                     .clip(RoundedCornerShape(28.dp))
                     .background(brush = roseGoldGradient)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
-                        onClick = { onSignInClick(email, password) }
-                    ),
+                    .clickable(enabled = !isLoading) { onSignInClick(email, password) },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "SIGN IN",
-                    style = TextStyle(
-                        fontFamily = RalewayFontFamily,
-                        fontSize = 18.sp,
-                        letterSpacing = 1.sp,
-                        color = Color.White
+                if (isLoading) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp)
                     )
-                )
+                } else {
+                    Text(
+                        text = "SIGN IN",
+                        style = TextStyle(
+                            fontFamily = RalewayFontFamily,
+                            fontSize = 18.sp,
+                            letterSpacing = 1.sp,
+                            color = Color.White
+                        )
+                    )
+                }
+            }
+
+            if (errorMessage != null) {
+                // Hata mesajı kutusu
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                        .background(
+                            color = Color(0xFFD32F2F).copy(alpha = 0.1f), // Kırmızımsı arka plan
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFFD32F2F).copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = errorMessage,
+                        color = Color(0xFFFFCDD2), // Açık kırmızı/pembe
+                        fontSize = 14.sp,
+                        fontFamily = RalewayFontFamily,
+                         modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
 
             // Forgot Password link
@@ -365,11 +398,7 @@ fun SignInScreen(
                         fontSize = 16.sp,
                         fontFamily = RalewayFontFamily
                     ),
-                    modifier = Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
-                        onClick = onForgotPasswordClick
-                    )
+                    modifier = Modifier.clickable(onClick = onForgotPasswordClick)
                 )
             }
 
@@ -421,11 +450,7 @@ fun SignInScreen(
 
                 Text(
                     text = signUpText,
-                    modifier = Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
-                        onClick = onSignUpClick
-                    )
+                    modifier = Modifier.clickable(onClick = onSignUpClick)
                 )
             }
         }

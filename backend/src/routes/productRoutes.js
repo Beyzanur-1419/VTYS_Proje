@@ -39,6 +39,31 @@ router.get('/recommendations', cache(300), productController.getRecommendations)
 
 /**
  * @swagger
+ * /products/recommendations/advanced:
+ *   post:
+ *     summary: Get advanced product recommendations based on profile
+ *     tags: [Products]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               skinType:
+ *                 type: string
+ *               problems:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: List of recommended products
+ */
+router.post('/recommendations/advanced', productController.getAdvancedRecommendations);
+
+/**
+ * @swagger
  * /products/trending:
  *   get:
  *     summary: Get trending products

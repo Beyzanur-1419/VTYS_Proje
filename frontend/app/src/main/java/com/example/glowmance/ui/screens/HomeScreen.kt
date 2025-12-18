@@ -4,8 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -105,12 +103,15 @@ data class Notification(
 
 @Composable
 fun HomeScreen(
-    userName: String = "Ayşe",
+    userName: String,
     onAnalysisClick: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToShop: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+    onLogoutClick: () -> Unit = {},
+    onNotificationClick: (Notification) -> Unit = {}
 ) {
     // State for bottom sheets
     var showProfileBottomSheet by remember { mutableStateOf(false) }
@@ -118,7 +119,7 @@ fun HomeScreen(
     
     // Mock notification data
     val notifications = remember {
-        listOf(
+        androidx.compose.runtime.mutableStateListOf(
             Notification(
                 id = "1",
                 title = "Cilt Analiz Sonucu",
@@ -219,10 +220,7 @@ fun HomeScreen(
                             tint = RoseGold,
                             modifier = Modifier
                                 .size(31.dp)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = rememberRipple()
-                                ) { showNotificationBottomSheet = true }
+                                .clickable { showNotificationBottomSheet = true }
                         )
                         
                         // Notification badge
@@ -244,10 +242,7 @@ fun HomeScreen(
                         tint = RoseGold,
                         modifier = Modifier
                             .size(31.dp)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple()
-                            ) { showProfileBottomSheet = true }
+                            .clickable { showProfileBottomSheet = true }
                     )
                 }
             }
@@ -307,10 +302,7 @@ fun HomeScreen(
                                 .shadow(6.dp, RoundedCornerShape(28.dp))
                                 .clip(RoundedCornerShape(28.dp))
                                 .background(brush = roseGoldGradient)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = rememberRipple()
-                                ) { onAnalysisClick() },
+                                .clickable { onAnalysisClick() },
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -379,10 +371,7 @@ fun HomeScreen(
                     // Home icon
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToHome() }
+                        modifier = Modifier.clickable { onNavigateToHome() }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Home,
@@ -395,10 +384,7 @@ fun HomeScreen(
                     // History icon
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToHistory() }
+                        modifier = Modifier.clickable { onNavigateToHistory() }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_history),
@@ -411,10 +397,7 @@ fun HomeScreen(
                     // Shopping bag icon
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToShop() }
+                        modifier = Modifier.clickable { onNavigateToShop() }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_shopping_bag),
@@ -427,10 +410,7 @@ fun HomeScreen(
                     // Profile icon
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple()
-                        ) { onNavigateToProfile() }
+                        modifier = Modifier.clickable { onNavigateToProfile() }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
@@ -452,8 +432,14 @@ fun HomeScreen(
                 showProfileBottomSheet = false
                 onNavigateToProfile() 
             },
-            onSettingsClick = { /* Navigate to settings */ },
-            onLogoutClick = { /* Handle logout */ }
+            onSettingsClick = { 
+                showProfileBottomSheet = false
+                onSettingsClick()
+            },
+            onLogoutClick = { 
+                showProfileBottomSheet = false
+                onLogoutClick()
+            }
         )
     }
     
@@ -462,7 +448,16 @@ fun HomeScreen(
         NotificationBottomSheet(
             notifications = notifications,
             onDismiss = { showNotificationBottomSheet = false },
-            onNotificationClick = { /* Handle notification click */ }
+            onNotificationClick = { notification ->
+                // Mark as read
+                val index = notifications.indexOfFirst { it.id == notification.id }
+                if (index != -1) {
+                    notifications[index] = notifications[index].copy(isRead = true)
+                }
+                
+                showNotificationBottomSheet = false
+                onNotificationClick(notification)
+            }
         )
     }
 }
@@ -518,10 +513,7 @@ fun ProfileBottomSheet(
                         tint = RoseGold
                     )
                 },
-                modifier = Modifier.clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple()
-                ) { onProfileClick() }
+                modifier = Modifier.clickable { onProfileClick() }
             )
             
             // Settings option
@@ -540,10 +532,7 @@ fun ProfileBottomSheet(
                         tint = RoseGold
                     )
                 },
-                modifier = Modifier.clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple()
-                ) { onSettingsClick() }
+                modifier = Modifier.clickable { onSettingsClick() }
             )
             
             // Logout option
@@ -562,10 +551,7 @@ fun ProfileBottomSheet(
                         tint = RoseGold
                     )
                 },
-                modifier = Modifier.clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple()
-                ) { onLogoutClick() }
+                modifier = Modifier.clickable { onLogoutClick() }
             )
             
             Spacer(modifier = Modifier.height(24.dp))
@@ -657,10 +643,7 @@ fun NotificationItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple()
-            ) { onClick() }
+            .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -722,6 +705,6 @@ fun NotificationItem(
 @Composable
 fun HomeScreenPreview() {
     GlowmanceTheme {
-        HomeScreen()
+        HomeScreen(userName = "Ayşe")
     }
 }
