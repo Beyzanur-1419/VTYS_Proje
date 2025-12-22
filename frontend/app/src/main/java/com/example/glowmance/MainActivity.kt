@@ -82,6 +82,15 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent?): Boolean {
+        if (currentFocus != null) {
+            val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+            imm.hideSoftInputFromWindow(currentFocus!!.windowToken, 0)
+            currentFocus!!.clearFocus()
+        }
+        return super.dispatchTouchEvent(ev)
+    }
 }
 
 // Define gradient brushes for MainActivity
@@ -449,7 +458,28 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         
         // Camera screen
         composable(route = Screen.Camera.route) {
-            CameraScreen(navController = navController)
+            // Get viewmodel to access shared processing logic if needed, or handle here
+             val cameraViewModel: com.example.glowmance.ui.screens.CameraViewModel = viewModel()
+            
+            CameraScreen(
+                onImageCaptured = { uri ->
+                    Log.d("Navigation", "Image captured: $uri")
+                    // Process image using ViewModel
+                    cameraViewModel.processCapturedImage(
+                        context = context,
+                        uri = uri,
+                        onSuccess = {
+                             navController.navigate(Screen.FaceScanning.route) {
+                                popUpTo(Screen.Camera.route) { inclusive = true }
+                            }
+                        },
+                        onFailure = { error ->
+                            android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_LONG).show()
+                        }
+                    )
+                },
+                onBackClick = { navController.popBackStack() }
+            )
         }
         
         // Face scanning screen
@@ -466,7 +496,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     acneLevel = "Akne – Orta Seviye",
                     hasRosacea = false,
                     rosaceaLevel = "Rozase – Yok",
-                    isNormal = false
+                    isNormal = false,
+                    detectedSkinType = "Karma",
+                    detectedDisease = "Akne"
                 )
             }
             
@@ -485,12 +517,31 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 acneLevel = lastAnalysisResult.acneLevel,
                 hasRosacea = lastAnalysisResult.hasRosacea,
                 rosaceaLevel = lastAnalysisResult.rosaceaLevel,
-                isNormal = lastAnalysisResult.isNormal
+                isNormal = lastAnalysisResult.isNormal,
+                detectedSkinType = lastAnalysisResult.detectedSkinType,
+                detectedDisease = lastAnalysisResult.detectedDisease
             )
             
+            // Get actual user name
+            val currentUserName = remember { userPreferences.getUserName() ?: "Değerli Üyemiz" }
+            
+            // Get recommended products
+            val savedProducts = remember { userPreferences.getRecommendedProducts() }
+            val uiProducts = remember(savedProducts) {
+                savedProducts.map { product ->
+                    com.example.glowmance.ui.screens.ProductUI(
+                        name = product.name,
+                        brand = product.brand,
+                        imageUrl = product.imageUrl ?: "",
+                        price = if (product.price != null) "${product.price} ${product.currency ?: "TL"}" else ""
+                    )
+                }
+            }
+
             SkinResultScreen(
-                userName = "Ayşe", // TODO: Gerçek kullanıcı adını kullan
+                userName = currentUserName,
                 skinConditionResult = skinConditionResult,
+                recommendedProducts = uiProducts,
                 onNewAnalysisClick = { navigateWithLog(Screen.Camera.route) },
                 onRecommendedProductsClick = { navigateWithLog(Screen.ProductRecommendations.route) },
                 onNavigateToProfile = { navigateWithLog(Screen.Profile.route) },
@@ -513,9 +564,10 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 if (token != null) {
                     try {
                         val repository = com.example.glowmance.data.repository.AnalysisRepository()
-                        val result = repository.getHistory(token)
-                        result.onSuccess { history ->
-                            analysisCount = history.size
+                        repository.getHistory(token).collect { result ->
+                            if (result is com.example.glowmance.data.api.NetworkResult.Success) {
+                                analysisCount = result.data?.size ?: 0
+                            }
                         }
                     } catch (e: Exception) {
                         // Ignore error for count, default 0
@@ -592,8 +644,32 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 onNavigateToHistory = { navigateWithLog(Screen.History.route) },
                 onNavigateToShop = { navigateWithLog(Screen.ProductRecommendations.route) },
                 onNavigateToHome = { navigateWithLog(Screen.Home.route) },
+                onNavigateToLogin = {
+                    navController.navigate(Screen.SignIn.route) {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                    }
+                },
                 onAnalysisItemClick = { historyItem -> 
-                    // Geçmiş analiz detayına tıklandığında SkinResult ekranına git
+                    // Save the clicked history item as the "current" result to view details
+                    userPreferences.saveLastSkinConditionResult(
+                        hasEczema = historyItem.hasEczema,
+                        eczemaLevel = historyItem.eczemaLevel ?: "Yok",
+                        hasAcne = historyItem.hasAcne,
+                        acneLevel = historyItem.acneLevel ?: "Yok",
+                        hasRosacea = historyItem.hasRosacea,
+                        rosaceaLevel = historyItem.rosaceaLevel ?: "Yok",
+                        isNormal = historyItem.isNormal,
+                        detectedSkinType = "Bilinmiyor (Geçmiş)",
+                        detectedDisease = when {
+                            historyItem.hasAcne -> "Akne"
+                            historyItem.hasEczema -> "Egzama"
+                            historyItem.hasRosacea -> "Gül Hastalığı"
+                            historyItem.isNormal -> "Normal"
+                            else -> "Belirsiz"
+                        }
+                    )
+                    
+                    // Navigate to SkinResult screen
                     navigateWithLog(Screen.SkinResult.route)
                 }
             )
@@ -609,7 +685,12 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 onNavigateToProfile = { navigateWithLog(Screen.Profile.route) },
                 onNavigateToHistory = { navigateWithLog(Screen.History.route) },
                 onNavigateToShop = { navigateWithLog(Screen.ProductRecommendations.route) },
-                onNavigateToHome = { navigateWithLog(Screen.Home.route) }
+                onNavigateToHome = { navigateWithLog(Screen.Home.route) },
+                onNavigateToLogin = {
+                    navController.navigate(Screen.SignIn.route) {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                    }
+                }
             )
         }
     }

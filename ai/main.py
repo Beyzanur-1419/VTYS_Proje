@@ -6,115 +6,159 @@ from torchvision import transforms
 from PIL import Image
 import io
 import os
-import glob
 
 app = FastAPI(title="Glowmance AI Service")
 
 # --- Configuration ---
 MODEL_DIR = "."
-# Automatically find a .pth file in the current directory
-model_files = glob.glob(os.path.join(MODEL_DIR, "*.pth"))
-MODEL_PATH = model_files[0] if model_files else "model.pth"
+DISEASE_MODEL_PATH = os.path.join(MODEL_DIR, "skin_disease_model.pth")
+TYPE_MODEL_PATH = os.path.join(MODEL_DIR, "skin_type_model.pth")
 
-# Label mapping (You might need to adjust this based on your training)
-# Assuming typical categorical output. Specify your actual classes here!
-# Example: 0: Normal, 1: Acne, 2: Eczema, etc.
-LABELS = {
-    0: "Normal",
-    1: "Akne",
-    2: "Egzama",
+# Label mapping
+DISEASE_LABELS = {
+    0: "Akne",
+    1: "Egzama",
+    2: "Normal", 
     3: "Rozase",
-    4: "Leke"
+    4: "Leke",
+    5: "Siğil"
+}
+
+TYPE_LABELS = {
+    0: "Kuru",
+    1: "Yağlı",
+    2: "Normal",
+    3: "Karma"
 }
 
 # --- Model Loading ---
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = None
+from torchvision import models
 
-def load_model():
-    global model
-    if not os.path.exists(MODEL_PATH):
-        print(f"Warning: Model file not found at {MODEL_PATH}")
-        return
+def load_model(path, model_name, num_classes):
+    if not os.path.exists(path):
+        print(f"Warning: {model_name} file not found at {path}")
+        return None
 
     try:
-        # 1. Try loading entire model (if saved with save(model))
-        # model = torch.load(MODEL_PATH, map_location=device)
+        # Load state dict
+        state_dict = torch.load(path, map_location=device)
         
-        # 2. OR Try loading state dict (if saved with save(model.state_dict()))
-        # You need to define the Architecture class here matching your training!
-        # For now, let's assume it's a full model load or we'll wrap it later.
-        # This is a PLACEHOLDER. User needs to confirm model architecture.
-        model = torch.load(MODEL_PATH, map_location=device)
-        model.eval()
-        print(f"Model loaded successfully from {MODEL_PATH}")
+        # Assume ResNet18 (Standard for these keys)
+        if "conv1.weight" in state_dict:
+             print(f"DEBUG: {model_name} detected as ResNet-like.")
+             model = models.resnet18(pretrained=False)
+             num_ftrs = model.fc.in_features
+             model.fc = nn.Linear(num_ftrs, num_classes)
+             
+             try:
+                 model.load_state_dict(state_dict)
+             except RuntimeError as e:
+                 print(f"ResNet18 load failed: {e}")
+                 print("Trying ResNet50...")
+                 model = models.resnet50(pretrained=False)
+                 num_ftrs = model.fc.in_features
+                 model.fc = nn.Linear(num_ftrs, num_classes)
+                 model.load_state_dict(state_dict)
+
+             model = model.to(device)
+             model.eval()
+             print(f"{model_name} loaded successfully (ResNet Architecture).")
+             return model
+
+        # Fallback for full model or other types
+        if hasattr(state_dict, 'eval'):
+             state_dict.eval()
+             return state_dict
+             
+        print(f"Error: {model_name} format not recognized/supported.")
+        return None
+             
     except Exception as e:
-        print(f"Error loading model: {e}")
+        print(f"Error loading {model_name}: {e}")
+        return None
 
 @app.on_event("startup")
 async def startup_event():
-    load_model()
+    global disease_model, type_model
+    # Disease: 4 detected (Assuming: Akne, Egzama, Normal, Rozase)
+    disease_model = load_model(DISEASE_MODEL_PATH, "Disease Model", num_classes=4)
+    # Type: 4 classes (Kuru, Yağlı, Normal, Karma)
+    type_model = load_model(TYPE_MODEL_PATH, "Type Model", num_classes=4)
 
 # --- Preprocessing ---
 transform = transforms.Compose([
-    transforms.Resize((224, 224)), # Adjust to your model's input size
+    transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    if model is None:
-        # Mock response if model is missing, to keep flow working
-        return {
-            "success": True,
-            "mock": True,
-            "data": {
-                "hasAcne": True,
-                "acneLevel": "Orta",
-                "hasEczema": False,
-                "score": 0.85
-            }
-        }
-        # raise HTTPException(status_code=503, detail="Model not loaded")
-
+    # Read and transform image once
     try:
-        # Read and transform image
         image_data = await file.read()
         image = Image.open(io.BytesIO(image_data)).convert('RGB')
         input_tensor = transform(image).unsqueeze(0).to(device)
-
-        # Inference
-        with torch.no_grad():
-            outputs = model(input_tensor)
-            _, predicted = torch.max(outputs, 1)
-            class_idx = predicted.item()
-            
-        result_label = LABELS.get(class_idx, "Bilinmiyor")
-
-        # Basic logic to map single label to our complex app structure
+        
         result = {
             "success": True,
-            "prediction_class": class_idx,
-            "prediction_label": result_label,
-            # Mapping logic (adjust based on your actual 5-class or N-class output)
-            "data": {
-                "hasAcne": result_label == "Akne",
-                "acneLevel": "Yüksek" if result_label == "Akne" else "Yok",
-                "hasEczema": result_label == "Egzama",
-                "eczemaLevel": "Orta" if result_label == "Egzama" else "Yok",
-                "isNormal": result_label == "Normal"
-            }
+            "data": {}
         }
-        return result
 
+        # 1. Disease Prediction
+        if disease_model:
+            try:
+                with torch.no_grad():
+                    outputs = disease_model(input_tensor)
+                    probabilities = torch.nn.functional.softmax(outputs, dim=1)
+                    print(f"DEBUG: Raw Probabilities: {probabilities}")
+                    _, predicted = torch.max(outputs, 1)
+                    idx = predicted.item()
+                    label = DISEASE_LABELS.get(idx, "Bilinmiyor")
+                    print(f"DEBUG: Predicted Class: {label} (Idx: {idx})")
+                    
+                    result["data"]["disease_prediction"] = label
+                    result["data"]["hasAcne"] = (label == "Akne")
+                    result["data"]["acneLevel"] = "Orta" if label == "Akne" else "Yok"
+                    result["data"]["hasEczema"] = (label == "Egzama")
+                    result["data"]["eczemaLevel"] = "Hafif" if label == "Egzama" else "Yok"
+                    result["data"]["hasRosacea"] = (label == "Rozase")
+            except Exception as e:
+                print(f"Disease Inference Error: {e}")
+                result["data"]["error_disease"] = str(e)
+        else:
+            result["data"]["disease_warning"] = "Model loaded değil"
+
+        # 2. Type Prediction
+        if type_model:
+            try:
+                with torch.no_grad():
+                    outputs = type_model(input_tensor)
+                    _, predicted = torch.max(outputs, 1)
+                    idx = predicted.item()
+                    label = TYPE_LABELS.get(idx, "Normal")
+                    
+                    result["data"]["skinType"] = label
+            except Exception as e:
+                print(f"Type Inference Error: {e}")
+                result["data"]["error_type"] = str(e)
+        else:
+             result["data"]["type_warning"] = "Model loaded değil"
+
+        return result
+        
     except Exception as e:
-        print(f"Prediction error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Prediction General Error: {e}")
+        return {"success": False, "error": str(e)}
 
 @app.get("/")
 def home():
-    return {"message": "AI Service is running", "model_found": model is not None, "model_path": MODEL_PATH}
+    return {
+        "message": "AI Service running", 
+        "disease_model": disease_model is not None, 
+        "type_model": type_model is not None
+    }
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

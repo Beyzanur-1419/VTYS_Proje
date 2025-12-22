@@ -5,6 +5,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -46,19 +48,24 @@ fun AccountSettingsScreen(
         ChangePasswordDialog(
             onDismiss = { showChangePasswordDialog = false },
             onConfirm = { oldPass, newPass ->
-                scope.launch {
-                    val token = userPreferences.getAuthToken()
-                    if (token != null) {
-                        try {
-                             val response = authApi.changePassword("Bearer $token", com.example.glowmance.data.model.ChangePasswordRequest(oldPass, newPass))
-                             if (response.isSuccessful) {
-                                  Toast.makeText(context, "Şifre başarıyla güncellendi", Toast.LENGTH_SHORT).show()
-                                  showChangePasswordDialog = false
-                             } else {
-                                  Toast.makeText(context, "Hata: ${response.message()}", Toast.LENGTH_SHORT).show()
-                             }
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "Bir hata oluştu: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (newPass.length < 6) {
+                    Toast.makeText(context, "Yeni şifre en az 6 karakter olmalıdır.", Toast.LENGTH_LONG).show()
+                } else {
+                    scope.launch {
+                        val token = userPreferences.getAuthToken()
+                        if (token != null) {
+                            try {
+                                 val response = authApi.changePassword("Bearer $token", com.example.glowmance.data.model.ChangePasswordRequest(oldPass, newPass))
+                                 if (response.isSuccessful) {
+                                      Toast.makeText(context, "Şifre başarıyla güncellendi", Toast.LENGTH_SHORT).show()
+                                      showChangePasswordDialog = false
+                                 } else {
+                                      val errorBody = response.errorBody()?.string() ?: response.message()
+                                      Toast.makeText(context, "Hata: $errorBody", Toast.LENGTH_LONG).show()
+                                 }
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Bir hata oluştu: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
                 }
@@ -132,6 +139,7 @@ fun AccountSettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(24.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             // Header
             Row(

@@ -29,7 +29,7 @@ class AuthViewModel : ViewModel() {
             loginState = AuthState.Loading
             errorMessage = null
             
-            val result = repository.login(LoginRequest(email, password))
+            val result = repository.login(LoginRequest(email.trim(), password.trim()))
             
             result.onSuccess { response ->
                 // Backend başarılı ise (200 OK), direkt başarılı kabul ediyoruz.

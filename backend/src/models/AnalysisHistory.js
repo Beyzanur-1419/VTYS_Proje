@@ -20,11 +20,25 @@ const AnalysisHistory = sequelize.define('AnalysisHistory', {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  result_json: {
+  skin_issues: {
     type: DataTypes.JSONB,
-    allowNull: false,
+    allowNull: true,
+  },
+  ai_score: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  recommended_products: {
+    type: DataTypes.JSONB,
+    allowNull: true,
+  },
+  result_json: {
+    type: DataTypes.JSONB, // Keeping for backward compatibility or full raw dump
+    allowNull: true,
   },
 }, {
+  tableName: 'AnalysisHistories',
+  underscored: true,
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',

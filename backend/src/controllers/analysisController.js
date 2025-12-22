@@ -6,6 +6,7 @@ const upload = require('../utils/uploader');
 class AnalysisController {
   async createAnalysis(req, res, next) {
     try {
+      console.log(`[AnalysisController] Creating analysis for User ID: ${req.user.id}`);
       const analysis = await analysisService.createAnalysis(req.user.id, req.body);
       res.status(201).json({ success: true, data: analysis });
     } catch (error) {
@@ -30,6 +31,7 @@ class AnalysisController {
           hasRosacea: resultJson.hasRosacea || resultJson.has_rosacea || false,
           rosaceaLevel: resultJson.rosaceaLevel || resultJson.rosacea_level || null,
           isNormal: resultJson.isNormal || resultJson.is_normal || false,
+          products: resultJson.recommendedProducts || resultJson.recommended_products || [],
           createdAt: item.created_at,
           updatedAt: item.updated_at || null
         };
@@ -77,7 +79,7 @@ class AnalysisController {
           'Sensitive': 'normal', // Map sensitive to normal for now
           'Normal': 'normal',
         };
-        
+
         const mappedType = typeMap[skinType] || 'normal';
         recommendedProducts = await productService.getProductsBySkinType(mappedType, 3);
       } catch (productError) {
@@ -140,15 +142,15 @@ class AnalysisController {
 
         const mappedDisease = diseaseMap[disease] || 'healthy';
         let recommendedProducts = [];
-        
+
         try {
           recommendedProducts = await productService.getProductsByDisease(mappedDisease, 3);
         } catch (err) {
           console.error("Product service failed during disease analysis:", err.message);
         }
 
-        res.status(200).json({ 
-          success: true, 
+        res.status(200).json({
+          success: true,
           data: {
             ...result,
             recommendedProducts: recommendedProducts
@@ -164,7 +166,7 @@ class AnalysisController {
           note: 'ML Service unavailable - using mock data',
         };
         const disease = mockResult.disease || 'healthy';
-        
+
         // Disease to Product Category Mapping
         const diseaseMap = {
           'Acne': 'acne',
@@ -179,15 +181,15 @@ class AnalysisController {
 
         const mappedDisease = diseaseMap[disease] || 'healthy';
         let recommendedProducts = [];
-        
+
         try {
           recommendedProducts = await productService.getProductsByDisease(mappedDisease, 3);
         } catch (err) {
           console.error("Product service failed during disease analysis:", err.message);
         }
 
-        res.status(200).json({ 
-          success: true, 
+        res.status(200).json({
+          success: true,
           data: {
             ...mockResult,
             recommendedProducts: recommendedProducts
@@ -197,10 +199,10 @@ class AnalysisController {
 
       // If ML service succeeded
       if (!res.headersSent) { // Check if response already sent in catch block
-         // NOTE: Ideally we should move this logic outside the try-catch or restructure, 
-         // but for now let's handle the success case here to match the user's request quickly.
-         // Wait, the original code had `res.status(200).json(...)` inside the try block. 
-         // I need to intercept that.
+        // NOTE: Ideally we should move this logic outside the try-catch or restructure, 
+        // but for now let's handle the success case here to match the user's request quickly.
+        // Wait, the original code had `res.status(200).json(...)` inside the try block. 
+        // I need to intercept that.
       }
     } catch (error) {
       next(error);
@@ -229,6 +231,97 @@ class AnalysisController {
     try {
       const stats = await analysisService.getStats(req.user.id);
       res.status(200).json({ success: true, data: stats });
+    } catch (error) {
+      next(error);
+    }
+  }
+  // Unified Analysis Endpoint
+  async analyzeFull(req, res, next) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'Image file is required' });
+      }
+
+      // Call Unified ML Service (using analyzeDisease wrapper since it returns full data)
+      let aiResult;
+      try {
+        console.log('[AnalysisController] Calling Real ML Service...');
+        aiResult = await mlServiceClient.analyzeDisease(
+          req.file.buffer || require('fs').readFileSync(req.file.path),
+          req.file.originalname
+        );
+        console.log('🔥🔥🔥 DEBUG - RAW AI RESULT:', JSON.stringify(aiResult, null, 2));
+      } catch (mlError) {
+        console.error('[AnalysisController] ML Service FAILED. Reason:', mlError.message);
+        console.warn('ML Service unavailable, using mock:', mlError.message);
+        aiResult = {
+          disease: 'Healthy',
+          skin_type: 'Normal',
+          hasAcne: false,
+          hasEczema: false,
+          note: 'Mock fallback - ML Service Failed'
+        };
+      }
+
+
+      // --- DEBUG FORCE REMOVED ---
+
+      // Get Product Recommendations
+      let recommendedProducts = [];
+      try {
+        // Use disease or skin type for recommendation
+        const target = aiResult.disease !== 'Healthy' ? aiResult.disease : aiResult.skin_type;
+        // Simple mapping logic
+        let query = 'normal';
+        if (aiResult.hasAcne) query = 'acne';
+        else if (aiResult.hasEczema) query = 'eczema';
+        else if (aiResult.hasRosacea || (aiResult.disease && aiResult.disease.toLowerCase().includes('rozase'))) query = 'rosacea';
+        else if (aiResult.skin_type === 'Oily') query = 'oily';
+        else if (aiResult.skin_type === 'Dry') query = 'dry';
+
+        recommendedProducts = await productService.getProductsByDisease(query, 10);
+
+        // --- FALLBACK: If no products found (e.g. Healthy/Normal returns empty), get general items ---
+        if (!recommendedProducts || recommendedProducts.length === 0) {
+          console.log('[AnalysisController] No specific products found. Fetching general fallback products.');
+          recommendedProducts = await productService.getProductsByDisease('skin', 6); // Increased limit
+        } else {
+          // Ensure we have enough products
+          if (recommendedProducts.length < 3) {
+            const extra = await productService.getProductsByDisease('skin', 3);
+            recommendedProducts = [...recommendedProducts, ...extra];
+          }
+        }
+      } catch (err) {
+        console.error('Product Rec Error:', err.message);
+      }
+
+      // Save Analysis
+      console.log(`[AnalysisController] Saving full analysis. User object:`, JSON.stringify(req.user));
+      if (!req.user || !req.user.id) {
+        throw new Error('User ID missing from request object');
+      }
+
+      const userId = req.user.id;
+      console.log(`[AnalysisController] Explicit User ID for DB: ${userId}`);
+
+      const savedAnalysis = await analysisService.createAnalysis(userId, {
+        image_url: req.file.path ? `/uploads/${req.file.filename}` : '',
+        result_json: {
+          ...aiResult,
+          recommendedProducts
+        }
+      });
+
+      res.status(200).json({
+        success: true,
+        data: {
+          analysisId: savedAnalysis.id,
+          result: aiResult,
+          products: recommendedProducts
+        }
+      });
+
     } catch (error) {
       next(error);
     }

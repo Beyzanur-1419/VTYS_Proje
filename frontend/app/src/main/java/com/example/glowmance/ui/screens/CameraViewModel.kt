@@ -45,8 +45,10 @@ class CameraViewModel : ViewModel() {
                     faceDetected = true
                     onSuccess()
                 } else {
-                    Log.d("CameraViewModel", "No face detected")
-                    onFailure("Yüz algılanamadı. Lütfen farklı bir fotoğraf seçin veya kamera ile deneyin.")
+                    Log.d("CameraViewModel", "No full face detected, but proceeding anyway (User Request)")
+                    // BYPASS: Allow partial faces or objects
+                    faceDetected = true 
+                    onSuccess()
                 }
                 isLoading = false
             }
@@ -63,11 +65,33 @@ class CameraViewModel : ViewModel() {
         try {
             Log.d("CameraViewModel", "Processing gallery image: $uri")
             val image = InputImage.fromFilePath(context, uri)
-            analyzeImage(image, onSuccess, onFailure)
+            analyzeImage(image, onSuccess = {
+                // Save URI to preferences for the next screen
+                com.example.glowmance.data.UserPreferences.getInstance(context).saveLastCapturedImage(uri.toString())
+                onSuccess()
+            }, onFailure)
         } catch (e: Exception) {
             Log.e("CameraViewModel", "Error processing gallery image", e)
             isLoading = false
             onFailure("Resim işlenirken bir hata oluştu: ${e.localizedMessage}")
+        }
+    }
+
+    // Process image captured from camera
+    fun processCapturedImage(context: Context, uri: Uri, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
+        isLoading = true
+        try {
+            Log.d("CameraViewModel", "Processing captured image: $uri")
+            val image = InputImage.fromFilePath(context, uri)
+            analyzeImage(image, onSuccess = {
+                // Save URI to preferences
+                com.example.glowmance.data.UserPreferences.getInstance(context).saveLastCapturedImage(uri.toString())
+                onSuccess()
+            }, onFailure)
+        } catch (e: Exception) {
+            Log.e("CameraViewModel", "Error processing captured image", e)
+            isLoading = false
+            onFailure("Fotoğraf işlenirken hata oluştu: ${e.localizedMessage}")
         }
     }
     

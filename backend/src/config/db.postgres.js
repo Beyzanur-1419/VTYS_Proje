@@ -3,12 +3,12 @@ const config = require('./index');
 
 const sequelize = new Sequelize(config.POSTGRES_URI, {
   dialect: 'postgres',
-  logging: config.NODE_ENV === 'development' ? console.log : false,
+  logging: console.log, // Enable logging to see SQL queries
   dialectOptions: {
-    ssl: {
+    ssl: process.env.DB_SSL === 'true' ? {
       require: true,
-      rejectUnauthorized: false // Required for Neon/AWS SSL connections
-    }
+      rejectUnauthorized: false
+    } : false
   },
   pool: {
     max: 5,

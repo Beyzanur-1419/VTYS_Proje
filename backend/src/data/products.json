@@ -8,8 +8,12 @@
         "price": 249.99,
         "currency": "TL",
         "description": "Kuru ciltler için hyaluronik asit ve seramid içeren nemlendirici",
-        "image_url": "https://via.placeholder.com/300x300?text=Moisturizer",
-        "ingredients": ["Hyaluronik Asit", "Seramidler", "Gliserin"],
+        "image_url": "/uploads/prod_lotion.jpg",
+        "ingredients": [
+          "Hyaluronik Asit",
+          "Seramidler",
+          "Gliserin"
+        ],
         "rating": 4.7,
         "review_count": 1250,
         "source": "Mock Database"
@@ -21,8 +25,12 @@
         "price": 189.99,
         "currency": "TL",
         "description": "Kuru ciltler için doğal yağlar içeren besleyici serum",
-        "image_url": "https://via.placeholder.com/300x300?text=Face+Oil",
-        "ingredients": ["Argan Yağı", "Jojoba Yağı", "E Vitamini"],
+        "image_url": "/uploads/prod_serum.jpg",
+        "ingredients": [
+          "Argan Yağı",
+          "Jojoba Yağı",
+          "E Vitamini"
+        ],
         "rating": 4.5,
         "review_count": 890,
         "source": "Mock Database"
@@ -34,8 +42,12 @@
         "price": 129.99,
         "currency": "TL",
         "description": "Kuru ciltler için yoğun nemlendirici maske",
-        "image_url": "https://via.placeholder.com/300x300?text=Hydration+Mask",
-        "ingredients": ["Hyaluronik Asit", "Aloe Vera", "Gliserin"],
+        "image_url": "/uploads/prod_cleanser.jpg",
+        "ingredients": [
+          "Hyaluronik Asit",
+          "Aloe Vera",
+          "Gliserin"
+        ],
         "rating": 4.6,
         "review_count": 650,
         "source": "Mock Database"
@@ -49,8 +61,12 @@
         "price": 199.99,
         "currency": "TL",
         "description": "Yağlı ciltler için gözenek sıkılaştırıcı tonik",
-        "image_url": "https://via.placeholder.com/300x300?text=Toner",
-        "ingredients": ["Salisilik Asit", "Niasinamid", "Çinko"],
+        "image_url": "/uploads/prod_acne_wash.jpg",
+        "ingredients": [
+          "Salisilik Asit",
+          "Niasinamid",
+          "Çinko"
+        ],
         "rating": 4.8,
         "review_count": 1580,
         "source": "Mock Database"
@@ -62,8 +78,12 @@
         "price": 229.99,
         "currency": "TL",
         "description": "Yağlı ciltler için mat bitişli hafif nemlendirici",
-        "image_url": "https://via.placeholder.com/300x300?text=Matte+Moisturizer",
-        "ingredients": ["Niasinamid", "Çinko Glukonat", "Salisilik Asit"],
+        "image_url": "/uploads/prod_lotion.jpg",
+        "ingredients": [
+          "Niasinamid",
+          "Çinko Glukonat",
+          "Salisilik Asit"
+        ],
         "rating": 4.7,
         "review_count": 1120,
         "source": "Mock Database"
@@ -75,8 +95,12 @@
         "price": 149.99,
         "currency": "TL",
         "description": "Yağlı ciltler için gözenek temizleyici kil maskesi",
-        "image_url": "https://via.placeholder.com/300x300?text=Clay+Mask",
-        "ingredients": ["Kaolin Kili", "Kömür", "Çay Ağacı Yağı"],
+        "image_url": "/uploads/prod_acne_wash.jpg",
+        "ingredients": [
+          "Kaolin Kili",
+          "Kömür",
+          "Çay Ağacı Yağı"
+        ],
         "rating": 4.6,
         "review_count": 890,
         "source": "Mock Database"
@@ -90,8 +114,12 @@
         "price": 219.99,
         "currency": "TL",
         "description": "Karma ciltler için dengeleyici hafif jel krem",
-        "image_url": "https://via.placeholder.com/300x300?text=Gel+Cream",
-        "ingredients": ["Termal Su", "Gliserin", "Niasinamid"],
+        "image_url": "/uploads/prod_lotion.jpg",
+        "ingredients": [
+          "Termal Su",
+          "Gliserin",
+          "Niasinamid"
+        ],
         "rating": 4.7,
         "review_count": 980,
         "source": "Mock Database"
@@ -103,8 +131,12 @@
         "price": 279.99,
         "currency": "TL",
         "description": "Karma ciltler için T-bölge ve kuru bölgeler için çift etkili serum",
-        "image_url": "https://via.placeholder.com/300x300?text=Dual+Serum",
-        "ingredients": ["Hyaluronik Asit", "Niasinamid", "Peptitler"],
+        "image_url": "/uploads/prod_serum.jpg",
+        "ingredients": [
+          "Hyaluronik Asit",
+          "Niasinamid",
+          "Peptitler"
+        ],
         "rating": 4.8,
         "review_count": 1340,
         "source": "Mock Database"
@@ -116,8 +148,12 @@
         "price": 159.99,
         "currency": "TL",
         "description": "Karma ciltler için pH dengeli yumuşak temizleyici",
-        "image_url": "https://via.placeholder.com/300x300?text=Cleanser",
-        "ingredients": ["Gliserin", "Pantenol", "Allantoin"],
+        "image_url": "/uploads/prod_cleanser.jpg",
+        "ingredients": [
+          "Gliserin",
+          "Pantenol",
+          "Allantoin"
+        ],
         "rating": 4.6,
         "review_count": 1670,
         "source": "Mock Database"
@@ -131,8 +167,12 @@
         "price": 239.99,
         "currency": "TL",
         "description": "Normal ciltler için güneş koruyuculu günlük bakım kremi",
-        "image_url": "https://via.placeholder.com/300x300?text=Daily+Moisturizer",
-        "ingredients": ["SPF 30", "E Vitamini", "Gliserin"],
+        "image_url": "/uploads/prod_lotion.jpg",
+        "ingredients": [
+          "SPF 30",
+          "E Vitamini",
+          "Gliserin"
+        ],
         "rating": 4.7,
         "review_count": 1450,
         "source": "Mock Database"
@@ -144,8 +184,12 @@
         "price": 349.99,
         "currency": "TL",
         "description": "Normal ciltler için aydınlatıcı C vitamini serumu",
-        "image_url": "https://via.placeholder.com/300x300?text=Vitamin+C",
-        "ingredients": ["C Vitamini", "Ferulik Asit", "E Vitamini"],
+        "image_url": "/uploads/prod_serum.jpg",
+        "ingredients": [
+          "C Vitamini",
+          "Ferulik Asit",
+          "E Vitamini"
+        ],
         "rating": 4.9,
         "review_count": 2100,
         "source": "Mock Database"
@@ -157,8 +201,12 @@
         "price": 179.99,
         "currency": "TL",
         "description": "Normal ciltler için onarıcı gece kremi",
-        "image_url": "https://via.placeholder.com/300x300?text=Night+Cream",
-        "ingredients": ["Retinol", "Peptitler", "Niasinamid"],
+        "image_url": "/uploads/prod_lotion.jpg",
+        "ingredients": [
+          "Retinol",
+          "Peptitler",
+          "Niasinamid"
+        ],
         "rating": 4.5,
         "review_count": 890,
         "source": "Mock Database"
@@ -174,8 +222,12 @@
         "price": 289.99,
         "currency": "TL",
         "description": "Akne eğilimli ciltler için salisilik asit içeren serum",
-        "image_url": "https://via.placeholder.com/300x300?text=Acne+Serum",
-        "ingredients": ["Salisilik Asit", "Niasinamid", "Çinko PCA"],
+        "image_url": "/uploads/prod_serum.jpg",
+        "ingredients": [
+          "Salisilik Asit",
+          "Niasinamid",
+          "Çinko PCA"
+        ],
         "rating": 4.8,
         "review_count": 1890,
         "source": "Mock Database"
@@ -187,8 +239,12 @@
         "price": 149.99,
         "currency": "TL",
         "description": "Akne lekeleri için benzoyl peroxide içeren tedavi kremi",
-        "image_url": "https://via.placeholder.com/300x300?text=Spot+Treatment",
-        "ingredients": ["Benzoyl Peroksit %5", "Gliserin", "Allantoin"],
+        "image_url": "/uploads/prod_acne_wash.jpg",
+        "ingredients": [
+          "Benzoyl Peroksit %5",
+          "Gliserin",
+          "Allantoin"
+        ],
         "rating": 4.6,
         "review_count": 1230,
         "source": "Mock Database"
@@ -200,8 +256,12 @@
         "price": 199.99,
         "currency": "TL",
         "description": "Akne eğilimli ciltler için yağsız nemlendirici",
-        "image_url": "https://via.placeholder.com/300x300?text=Oil+Free",
-        "ingredients": ["Niasinamid", "Hyaluronik Asit", "Allantoin"],
+        "image_url": "/uploads/prod_lotion.jpg",
+        "ingredients": [
+          "Niasinamid",
+          "Hyaluronik Asit",
+          "Allantoin"
+        ],
         "rating": 4.7,
         "review_count": 1560,
         "source": "Mock Database"
@@ -215,8 +275,12 @@
         "price": 269.99,
         "currency": "TL",
         "description": "Egzama için yulaf özü içeren rahatlatıcı krem",
-        "image_url": "https://via.placeholder.com/300x300?text=Eczema+Relief",
-        "ingredients": ["Kolloidal Yulaf", "Seramidler", "Gliserin"],
+        "image_url": "/uploads/prod_lotion.jpg",
+        "ingredients": [
+          "Kolloidal Yulaf",
+          "Seramidler",
+          "Gliserin"
+        ],
         "rating": 4.8,
         "review_count": 1450,
         "source": "Mock Database"
@@ -228,8 +292,12 @@
         "price": 189.99,
         "currency": "TL",
         "description": "Egzamalı ciltler için sabun içermeyen temizleyici",
-        "image_url": "https://via.placeholder.com/300x300?text=Gentle+Cleanser",
-        "ingredients": ["Omega-6 Yağ Asitleri", "Licochalcone A", "Gliserin"],
+        "image_url": "/uploads/prod_cleanser.jpg",
+        "ingredients": [
+          "Omega-6 Yağ Asitleri",
+          "Licochalcone A",
+          "Gliserin"
+        ],
         "rating": 4.7,
         "review_count": 980,
         "source": "Mock Database"
@@ -241,8 +309,12 @@
         "price": 249.99,
         "currency": "TL",
         "description": "Egzama için cilt bariyerini onarıcı krem",
-        "image_url": "https://via.placeholder.com/300x300?text=Barrier+Cream",
-        "ingredients": ["Seramidler", "Hyaluronik Asit", "Niasinamid"],
+        "image_url": "/uploads/prod_lotion.jpg",
+        "ingredients": [
+          "Seramidler",
+          "Hyaluronik Asit",
+          "Niasinamid"
+        ],
         "rating": 4.9,
         "review_count": 2340,
         "source": "Mock Database"
@@ -256,8 +328,12 @@
         "price": 319.99,
         "currency": "TL",
         "description": "Rozasea için kızarıklık azaltıcı krem",
-        "image_url": "https://via.placeholder.com/300x300?text=Rosacea+Cream",
-        "ingredients": ["Termal Su", "Ruscus Özü", "Dekstran Sülfat"],
+        "image_url": "/uploads/prod_lotion.jpg",
+        "ingredients": [
+          "Termal Su",
+          "Ruscus Özü",
+          "Dekstran Sülfat"
+        ],
         "rating": 4.8,
         "review_count": 1120,
         "source": "Mock Database"
@@ -269,8 +345,12 @@
         "price": 229.99,
         "currency": "TL",
         "description": "Rozasea kızarıklıkları için yeşil renk düzeltici krem",
-        "image_url": "https://via.placeholder.com/300x300?text=Color+Corrector",
-        "ingredients": ["Ambophenol", "Kafein", "Niasinamid"],
+        "image_url": "/uploads/prod_cleanser.jpg",
+        "ingredients": [
+          "Ambophenol",
+          "Kafein",
+          "Niasinamid"
+        ],
         "rating": 4.6,
         "review_count": 890,
         "source": "Mock Database"
@@ -282,8 +362,12 @@
         "price": 279.99,
         "currency": "TL",
         "description": "Rozasea için mineral filtreli güneş koruyucu",
-        "image_url": "https://via.placeholder.com/300x300?text=Mineral+SPF",
-        "ingredients": ["Çinko Oksit", "Titanyum Dioksit", "E Vitamini"],
+        "image_url": "/uploads/prod_lotion.jpg",
+        "ingredients": [
+          "Çinko Oksit",
+          "Titanyum Dioksit",
+          "E Vitamini"
+        ],
         "rating": 4.7,
         "review_count": 1340,
         "source": "Mock Database"
@@ -297,8 +381,12 @@
         "price": 299.99,
         "currency": "TL",
         "description": "Sağlıklı ciltler için antioksidan koruma serumu",
-        "image_url": "https://via.placeholder.com/300x300?text=Antioxidant",
-        "ingredients": ["C Vitamini", "E Vitamini", "Resveratrol"],
+        "image_url": "/uploads/prod_serum.jpg",
+        "ingredients": [
+          "C Vitamini",
+          "E Vitamini",
+          "Resveratrol"
+        ],
         "rating": 4.7,
         "review_count": 1560,
         "source": "Mock Database"
@@ -310,8 +398,12 @@
         "price": 189.99,
         "currency": "TL",
         "description": "Sağlıklı ciltler için hafif günlük nemlendirici",
-        "image_url": "https://via.placeholder.com/300x300?text=Daily+SPF",
-        "ingredients": ["Hyaluronik Asit", "SPF 30", "Gliserin"],
+        "image_url": "/uploads/prod_lotion.jpg",
+        "ingredients": [
+          "Hyaluronik Asit",
+          "SPF 30",
+          "Gliserin"
+        ],
         "rating": 4.6,
         "review_count": 1890,
         "source": "Mock Database"
@@ -323,8 +415,12 @@
         "price": 249.99,
         "currency": "TL",
         "description": "Sağlıklı ciltler için yaşlanma karşıtı gece serumu",
-        "image_url": "https://via.placeholder.com/300x300?text=Night+Serum",
-        "ingredients": ["Retinol", "Niasinamid", "Peptitler"],
+        "image_url": "/uploads/prod_serum.jpg",
+        "ingredients": [
+          "Retinol",
+          "Niasinamid",
+          "Peptitler"
+        ],
         "rating": 4.8,
         "review_count": 2100,
         "source": "Mock Database"

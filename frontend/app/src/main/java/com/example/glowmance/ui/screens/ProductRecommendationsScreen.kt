@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -100,7 +102,8 @@ fun ProductRecommendationsScreen(
     onNavigateToProfile: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToShop: () -> Unit = {},
-    onNavigateToHome: () -> Unit = {}
+    onNavigateToHome: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {}
 ) {
     val state = viewModel.productState
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
@@ -182,6 +185,31 @@ fun ProductRecommendationsScreen(
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.align(Alignment.Center)
                             )
+                        }
+                        is ProductState.SessionExpired -> {
+                             Column(
+                                 modifier = Modifier.fillMaxSize(),
+                                 verticalArrangement = Arrangement.Center,
+                                 horizontalAlignment = Alignment.CenterHorizontally
+                             ) {
+                                 Text(
+                                     text = "Oturum süresi doldu.",
+                                     style = TextStyle(color = Color.White, fontSize = 18.sp),
+                                     modifier = Modifier.padding(bottom = 8.dp)
+                                 )
+                                 Text(
+                                     text = "Lütfen tekrar giriş yapın.",
+                                     style = TextStyle(color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp),
+                                     modifier = Modifier.padding(bottom = 24.dp)
+                                 )
+                                 Button(
+                                     onClick = onNavigateToLogin,
+                                     colors = ButtonDefaults.buttonColors(containerColor = RoseGold),
+                                     shape = RoundedCornerShape(24.dp)
+                                 ) {
+                                     Text(text = "Giriş Yap", color = Color.White)
+                                 }
+                             }
                         }
                         is ProductState.Empty -> {
                             Text(
@@ -337,7 +365,7 @@ fun ProductCard(
                     .background(Color.White.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
-                 val finalUrl = if (product.imageUrl.isNullOrEmpty()) "" else if (product.imageUrl.startsWith("http")) product.imageUrl else "http://10.0.2.2:3001${product.imageUrl}"
+                 val finalUrl = if (product.imageUrl.isNullOrEmpty()) "" else if (product.imageUrl.startsWith("http")) product.imageUrl else "http://10.95.88.105:3000${product.imageUrl}"
                  val painter = rememberAsyncImagePainter(
                     model = androidx.compose.ui.platform.LocalContext.current.run {
                         coil.request.ImageRequest.Builder(this)
@@ -459,7 +487,7 @@ fun ProductDetailDialog(
                         .padding(8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                     val finalUrl = if (product.imageUrl.isNullOrEmpty()) "" else if (product.imageUrl.startsWith("http")) product.imageUrl else "http://10.0.2.2:3001${product.imageUrl}"
+                     val finalUrl = if (product.imageUrl.isNullOrEmpty()) "" else if (product.imageUrl.startsWith("http")) product.imageUrl else "http://10.95.88.105:3000${product.imageUrl}"
                      val painter = rememberAsyncImagePainter(
                         model = androidx.compose.ui.platform.LocalContext.current.run {
                             coil.request.ImageRequest.Builder(this)

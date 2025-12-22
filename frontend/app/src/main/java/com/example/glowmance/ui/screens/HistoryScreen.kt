@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -71,6 +73,7 @@ fun HistoryScreen(
     onNavigateToHistory: () -> Unit,
     onNavigateToShop: () -> Unit,
     onNavigateToHome: () -> Unit,
+    onNavigateToLogin: () -> Unit,
     onAnalysisItemClick: (AnalysisHistoryItem) -> Unit = {}
 ) {
     val state = viewModel.historyState
@@ -113,6 +116,31 @@ fun HistoryScreen(
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(text = state.message, color = Color.White)
                     }
+                }
+                is HistoryState.SessionExpired -> {
+                     Column(
+                         modifier = Modifier.fillMaxSize(),
+                         verticalArrangement = Arrangement.Center,
+                         horizontalAlignment = Alignment.CenterHorizontally
+                     ) {
+                         Text(
+                             text = "Oturum süresi doldu.",
+                             style = TextStyle(color = Color.White, fontSize = 18.sp),
+                             modifier = Modifier.padding(bottom = 8.dp)
+                         )
+                         Text(
+                             text = "Lütfen tekrar giriş yapın.",
+                             style = TextStyle(color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp),
+                             modifier = Modifier.padding(bottom = 24.dp)
+                         )
+                         Button(
+                             onClick = onNavigateToLogin,
+                             colors = ButtonDefaults.buttonColors(containerColor = RoseGold),
+                             shape = RoundedCornerShape(24.dp)
+                         ) {
+                             Text(text = "Giriş Yap", color = Color.White)
+                         }
+                     }
                 }
                 is HistoryState.Empty -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -238,7 +266,7 @@ fun AnalysisImageCircle(imageUrl: String?, label: String) {
              val painter = if (imageUrl.isNullOrEmpty()) {
                  painterResource(id = R.drawable.skinresult) // Placeholder
              } else {
-                 val finalUrl = if (imageUrl.startsWith("http")) imageUrl else "http://10.52.210.183:3001$imageUrl"
+                 val finalUrl = com.example.glowmance.data.api.NetworkConfig.getFullImageUrl(imageUrl)
                  rememberAsyncImagePainter(model = finalUrl)
              }
              
@@ -324,7 +352,7 @@ fun TimelineItem(
                             .clip(CircleShape)
                             .border(1.dp, RoseGold, CircleShape)
                     ) {
-                        val finalUrl = if (item.imageUrl.isNullOrEmpty()) "" else if (item.imageUrl.startsWith("http")) item.imageUrl else "http://10.52.210.183:3001${item.imageUrl}"
+                        val finalUrl = com.example.glowmance.data.api.NetworkConfig.getFullImageUrl(item.imageUrl)
                         val painter = if (finalUrl.isEmpty()) painterResource(id = R.drawable.skinresult) else rememberAsyncImagePainter(model = finalUrl)
                         Image(
                             painter = painter,

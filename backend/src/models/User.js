@@ -69,8 +69,9 @@ const User = sequelize.define('User', {
   },
 }, {
   timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at',
+  underscored: true, // Automatically maps camelCase to snake_case (createdAt -> created_at, skinType -> skin_type)
+  // createdAt: 'created_at', // Implied by underscored: true
+  // updatedAt: 'updated_at', // Implied by underscored: true
   hooks: {
     beforeCreate: async (user) => {
       if (user.password) {

@@ -1,9 +1,9 @@
 package com.example.glowmance.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
@@ -126,7 +128,9 @@ data class SkinConditionResult(
     val acneLevel: String = "Yok",
     val hasRosacea: Boolean = false,
     val rosaceaLevel: String = "Yok",
-    val isNormal: Boolean = true
+    val isNormal: Boolean = true,
+    val detectedSkinType: String = "",
+    val detectedDisease: String = ""
 )
 
 // Extension function to convert to data layer SkinAnalysisResult
@@ -137,13 +141,16 @@ fun SkinConditionResult.toSkinAnalysisResult() = com.example.glowmance.data.Skin
     acneLevel = acneLevel,
     hasRosacea = hasRosacea,
     rosaceaLevel = rosaceaLevel,
-    isNormal = isNormal
+    isNormal = isNormal,
+    detectedSkinType = detectedSkinType,
+    detectedDisease = detectedDisease
 )
 
 @Composable
 fun SkinResultScreen(
     userName: String = "Ayşe",
     skinConditionResult: SkinConditionResult = SkinConditionResult(),
+    recommendedProducts: List<ProductUI> = emptyList(),
     onNewAnalysisClick: () -> Unit = {},
     onRecommendedProductsClick: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
@@ -165,7 +172,8 @@ fun SkinResultScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp),
+                .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
+                .verticalScroll(rememberScrollState()),
         ) {
             // Top bar with logo on left and notification/profile on right
             Row(
@@ -247,7 +255,6 @@ fun SkinResultScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
                     .padding(vertical = 2.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
@@ -276,6 +283,56 @@ fun SkinResultScreen(
                     ),
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
+
+                // --- NEW SUMMARY CARD ---
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 8.dp)
+                        .shadow(8.dp, RoundedCornerShape(16.dp)),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "ANALİZ SONUCU",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 2.sp,
+                                color = Color.Gray
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = if (skinConditionResult.detectedSkinType.isNotEmpty()) 
+                                skinConditionResult.detectedSkinType.uppercase() else "BİLİNMİYOR",
+                            style = TextStyle(
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                brush = roseGoldGradient
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                         Text(
+                            text = "(${if (skinConditionResult.detectedDisease.isNotEmpty()) 
+                                skinConditionResult.detectedDisease else "Durum Tespit Edilemedi"})",
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = RoseGoldDark
+                            )
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                // ------------------------
                 
                 // Skin condition cards in a 2x2 grid
                 Column(
@@ -396,18 +453,96 @@ fun SkinResultScreen(
                 }
             }
             
+            // Recommended Products Section REMOVED as per user request
+            // if (recommendedProducts.isNotEmpty()) { ... }
+            
             // Bottom Navigation Bar
             com.example.glowmance.ui.components.GlowmanceBottomNavigationBar(
-                selectedTab = -1, // No specific tab selected for result screen, or functionality implies 'Home'? 
-                                  // Actually, Skin Analysis is often part of Home or a separate flow. 
-                                  // Let's keep it unselected (-1) or if it's considered "Home" usage.
-                                  // Looking at the previous code: "Thicker part ... (none selected in this screen)"
-                                  // So -1 is appropriate.
+                selectedTab = -1,
                 onNavigateToHome = onNavigateToHome,
                 onNavigateToHistory = onNavigateToHistory,
                 onNavigateToShop = onNavigateToShop,
                 onNavigateToProfile = onNavigateToProfile
             )
+        }
+    }
+}
+
+// Simple Product Data Class for UI
+data class ProductUI(
+    val name: String,
+    val brand: String,
+    val imageUrl: String,
+    val price: String = ""
+)
+
+@Composable
+fun ProductCard(product: ProductUI) {
+    Card(
+        modifier = Modifier
+            .width(160.dp)
+            .height(240.dp)
+            .shadow(4.dp, RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Product Image (Placeholder or AsyncImage)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .background(Color.Gray.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                 // Using a placeholder icon for now since we might not have Coil set up perfectly yet 
+                 // or just use basic Image if drawable resource available. 
+                 // For dynamic URLs we need Coil/Glide. Assuming Coil is available or using placeholder.
+                 Icon(
+                     imageVector = Icons.Default.Home, // Placeholder icon
+                     contentDescription = null,
+                     tint = RoseGoldShimmer3,
+                     modifier = Modifier.size(48.dp)
+                 )
+            }
+            
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = product.brand,
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+                Text(
+                    text = product.name,
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
+                if (product.price.isNotEmpty()) {
+                    Text(
+                        text = product.price,
+                        style = TextStyle(
+                            fontSize = 14.sp,
+                            color = RoseGoldDark,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+            }
         }
     }
 }

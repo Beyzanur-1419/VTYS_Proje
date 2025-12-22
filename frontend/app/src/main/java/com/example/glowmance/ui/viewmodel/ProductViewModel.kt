@@ -16,9 +16,8 @@ sealed class ProductState {
     data class Success(val products: List<Product>) : ProductState()
     data class Error(val message: String) : ProductState()
     object Empty : ProductState()
+    object SessionExpired : ProductState()
 }
-
-
 
 class ProductViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = ProductRepository()
@@ -39,34 +38,50 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             productState = ProductState.Loading
             
-            // Get profile details from preferences
-            val profile = userPreferences.getProfileDetails()
-            // Using last analysis result for problems (mock logic mapping)
-            val lastAnalysis = userPreferences.getLastSkinConditionResult()
-            
-            val problems = mutableListOf<String>()
-            if (lastAnalysis.hasAcne) problems.add("akne")
-            if (lastAnalysis.hasEczema) problems.add("egzama")
-            if (lastAnalysis.hasRosacea) problems.add("rozase")
-            
-            val request = com.example.glowmance.data.model.AdvancedRecommendationRequest(
-                skinType = profile.skinType.takeIf { it.isNotEmpty() } ?: "Normal",
-                problems = problems,
-                sensitivity = if (lastAnalysis.hasEczema || lastAnalysis.hasRosacea) "Yüksek" else "Normal",
-                acne = if (lastAnalysis.hasAcne) "Var" else "Yok",
-                careLevel = "Orta" // Default or fetched if available
-            )
-            
-            val result = repository.getAdvancedRecommendations(request)
-            
-            result.onSuccess { products ->
-                if (products.isEmpty()) {
-                    productState = ProductState.Empty
-                } else {
-                    productState = ProductState.Success(products)
+            try {
+                // Get profile details from preferences
+                val profile = userPreferences.getProfileDetails()
+                // Using last analysis result for problems (mock logic mapping)
+                val lastAnalysis = userPreferences.getLastSkinConditionResult()
+                
+                val problems = mutableListOf<String>()
+                if (lastAnalysis.hasAcne) problems.add("akne")
+                if (lastAnalysis.hasEczema) problems.add("egzama")
+                if (lastAnalysis.hasRosacea) problems.add("rozase")
+
+                // PRIORITY FIX: Use products directly from the last analysis if available
+                val cachedProducts = userPreferences.getRecommendedProducts()
+                if (cachedProducts.isNotEmpty()) {
+                    productState = ProductState.Success(cachedProducts)
+                    return@launch
                 }
-            }.onFailure { e ->
-                productState = ProductState.Error(e.message ?: "Ürünler yüklenirken hata oluştu.")
+                
+                val request = com.example.glowmance.data.model.AdvancedRecommendationRequest(
+                    skinType = profile.skinType.takeIf { it.isNotEmpty() } ?: "Normal",
+                    problems = problems,
+                    sensitivity = if (lastAnalysis.hasEczema || lastAnalysis.hasRosacea) "Yüksek" else "Normal",
+                    acne = if (lastAnalysis.hasAcne) "Var" else "Yok",
+                    careLevel = "Orta" // Default or fetched if available
+                )
+                
+                val result = repository.getAdvancedRecommendations(request)
+                
+                result.onSuccess { products ->
+                    if (products.isEmpty()) {
+                        productState = ProductState.Empty
+                    } else {
+                        productState = ProductState.Success(products)
+                    }
+                }.onFailure { e ->
+                    if (e is retrofit2.HttpException && e.code() == 401) {
+                         userPreferences.clearAuth()
+                         productState = ProductState.SessionExpired
+                    } else {
+                        productState = ProductState.Error(e.message ?: "Ürünler yüklenirken hata oluştu.")
+                    }
+                }
+            } catch (e: Exception) {
+                productState = ProductState.Error("Beklenmedik bir hata: ${e.message}")
             }
         }
     }

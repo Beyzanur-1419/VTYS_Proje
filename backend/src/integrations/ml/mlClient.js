@@ -18,20 +18,29 @@ class MLServiceClient {
   async analyzeSkinType(imageBuffer, filename) {
     try {
       const formData = new FormData();
-      formData.append('image', imageBuffer, filename);
+      formData.append('file', imageBuffer, filename); // Python expects 'file'
 
       const response = await axios.post(
-        `${this.baseUrl}/analyze/skin-type`,
+        `${this.baseUrl}/predict`,
         formData,
         {
-          headers: formData.getHeaders(),
+          headers: {
+            ...formData.getHeaders(),
+          },
           timeout: 30000,
         }
       );
 
-      return response.data;
+      // Map Python response to what controller expects
+      const data = response.data.data;
+      return {
+        skin_type: data.skinType || 'Normal', // Map 'skinType' to 'skin_type'
+        confidence: 0.9, // Mock confidence
+        ...data // include other data if needed
+      };
     } catch (error) {
       console.error('ML Service Error (Skin Type):', error.message);
+      // Fallback or rethrow based on preference. Controller handles throw.
       throw new Error('ML Service unavailable for skin type analysis');
     }
   }
@@ -39,18 +48,27 @@ class MLServiceClient {
   async analyzeDisease(imageBuffer, filename) {
     try {
       const formData = new FormData();
-      formData.append('image', imageBuffer, filename);
+      formData.append('file', imageBuffer, filename); // Python expects 'file'
 
       const response = await axios.post(
-        `${this.baseUrl}/analyze/disease`,
+        `${this.baseUrl}/predict`,
         formData,
         {
-          headers: formData.getHeaders(),
+          headers: {
+            ...formData.getHeaders(),
+          },
           timeout: 30000,
         }
       );
 
-      return response.data;
+      const data = response.data.data;
+      return {
+        disease: data.disease_prediction || 'Healthy', // Map 'disease_prediction' to 'disease'
+        confidence: 0.9,
+        // Map detailed flags for controller's immediate use if needed, 
+        // though controller extracts from result_json too.
+        ...data
+      };
     } catch (error) {
       console.error('ML Service Error (Disease):', error.message);
       throw new Error('ML Service unavailable for disease analysis');

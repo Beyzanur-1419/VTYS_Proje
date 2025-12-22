@@ -151,4 +151,27 @@ router.post('/skin-type', upload.single('image'), analysisController.analyzeSkin
  */
 router.post('/disease', upload.single('image'), analysisController.analyzeDisease);
 
+/**
+ * @swagger
+ * /analysis/analyze:
+ *   post:
+ *     summary: Unified skin analysis (Type + Disease)
+ *     tags: [Analysis]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Full analysis result
+ */
+router.post('/analyze', upload.single('image'), analysisController.analyzeFull);
+
 module.exports = router;

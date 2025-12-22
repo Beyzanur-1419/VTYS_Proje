@@ -60,32 +60,21 @@ private val roseGoldGradient = Brush.linearGradient(
 
 @Composable
 fun FaceScanningScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: com.example.glowmance.ui.viewmodel.AnalysisViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var progress by remember { mutableStateOf(0f) }
+    // var progress by remember { mutableStateOf(0f) } // Remove manual progress for now or simulate it while loading
     
-    // Simulate scanning process with progress
+    // Real analysis process
     LaunchedEffect(key1 = true) {
-        coroutineScope.launch {
-            Log.d("FaceScanningScreen", "Yüz tarama ekranı başlatıldı, 3 saniye beklenecek...")
-            
-            // Simulate scanning with progress updates
-            val totalDuration = 3000 // 3 seconds
-            val updateInterval = 50 // Update every 50ms
-            val steps = totalDuration / updateInterval
-            
-            for (i in 1..steps) {
-                delay(updateInterval.toLong())
-                progress = i.toFloat() / steps
-            }
-            
-            // Navigate to results screen
-            Log.d("FaceScanningScreen", "Tarama tamamlandı, sonuç ekranına yönlendiriliyor...")
-            navController.navigate(Screen.SkinResult.route) {
-                // Clear the back stack so user can't go back to scanning
+        viewModel.performAnalysis(context) {
+             // On success
+             Log.d("FaceScanningScreen", "Analiz başarılı, sonuç ekranına yönlendiriliyor...")
+             navController.navigate(Screen.SkinResult.route) {
                 popUpTo(Screen.FaceScanning.route) { inclusive = true }
-            }
+             }
         }
     }
     
@@ -145,7 +134,7 @@ fun FaceScanningScreen(
         ) {
             // Title
             Text(
-                text = "Cilt Analizi işleniyor...",
+                text = if (viewModel.isLoading) "Cilt Analizi işleniyor..." else "Analiz Tamamlandı",
                 style = TextStyle(
                     color = Color.White,
                     fontSize = 24.sp,
@@ -157,7 +146,10 @@ fun FaceScanningScreen(
             
             // Subtitle
             Text(
-                text = "Yapay zeka analizimiz yüz hatlarınızı inceliyor ve size özel sonuçlar hazırlıyor.",
+                text = if (viewModel.isLoading) 
+                    "Yapay zeka analizimiz yüz hatlarınızı inceliyor ve size özel sonuçlar hazırlıyor."
+                else
+                    "Sonuçlar hazırlanıyor, yönlendiriliyorsunuz...",
                 style = TextStyle(
                     color = Color.White.copy(alpha = 0.7f),
                     fontSize = 14.sp,
@@ -176,17 +168,31 @@ fun FaceScanningScreen(
             
             Spacer(modifier = Modifier.height(32.dp))
             
-            // Progress bar
-            LinearProgressIndicator(
-                progress = progress,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
-                color = RoseGold,
-                trackColor = Color.White.copy(alpha = 0.3f)
-            )
+            // Progress bar (Indeterminate while loading)
+            if (viewModel.isLoading) {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = RoseGold,
+                    trackColor = Color.White.copy(alpha = 0.3f)
+                )
+            }
             
+            // Error Message
+             viewModel.error?.let { error ->
+                Text(
+                    text = error,
+                    style = TextStyle(
+                        color = Color.Red, // Visible error color
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    ),
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
             
             // Bottom text

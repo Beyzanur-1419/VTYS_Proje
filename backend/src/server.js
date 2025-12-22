@@ -30,7 +30,7 @@ const startServer = async () => {
       logger.warn('⚠️  Server will continue without Redis cache.');
     }
 
-    app.listen(config.PORT, () => {
+    app.listen(config.PORT, '0.0.0.0', () => {
       logger.info(`Server running in ${config.NODE_ENV} mode on port ${config.PORT}`);
     });
   } catch (error) {

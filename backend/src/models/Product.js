@@ -20,7 +20,19 @@ const Product = sequelize.define('Product', {
     allowNull: true,
   },
   ingredients: {
-    type: DataTypes.TEXT, // Store as JSON string or text if simple list
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  suitable_skin_types: {
+    type: DataTypes.JSONB, // Array of strings e.g. ["Oily", "Acne"]
+    allowNull: true,
+  },
+  category: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  source: {
+    type: DataTypes.STRING,
     allowNull: true,
   },
   image_url: {

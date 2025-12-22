@@ -18,6 +18,7 @@ sealed class HistoryState {
     data class Success(val history: List<AnalysisHistoryItem>) : HistoryState()
     data class Error(val message: String) : HistoryState()
     object Empty : HistoryState()
+    object SessionExpired : HistoryState()
 }
 
 class HistoryViewModel(application: Application) : AndroidViewModel(application) {
@@ -33,26 +34,36 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
 
     fun fetchHistory() {
         viewModelScope.launch {
-            historyState = HistoryState.Loading
-            
             val token = userPreferences.getAuthToken()
             if (token == null) {
-                historyState = HistoryState.Error("Oturum bulunamadı, lütfen tekrar giriş yapın.")
+                historyState = HistoryState.SessionExpired
                 return@launch
             }
 
-            val result = repository.getHistory(token)
-            
-            result.onSuccess { historyList ->
-                if (historyList.isEmpty()) {
-                    historyState = HistoryState.Empty
-                } else {
-                    // Sort by date descending (newest first)
-                    val sortedList = historyList.sortedByDescending { it.createdAt }
-                    historyState = HistoryState.Success(sortedList)
+            repository.getHistory(token).collect { result ->
+                when (result) {
+                    is com.example.glowmance.data.api.NetworkResult.Loading -> {
+                        historyState = HistoryState.Loading
+                    }
+                    is com.example.glowmance.data.api.NetworkResult.Success -> {
+                        val historyList = result.data ?: emptyList()
+                        if (historyList.isEmpty()) {
+                            historyState = HistoryState.Empty
+                        } else {
+                            val sortedList = historyList.sortedByDescending { it.createdAt }
+                            historyState = HistoryState.Success(sortedList)
+                        }
+                    }
+                    is com.example.glowmance.data.api.NetworkResult.Error -> {
+                        val msg = result.message ?: "Geçmiş yüklenirken bir hata oluştu."
+                        if (msg.contains("Oturum süresi doldu", ignoreCase = true)) {
+                            userPreferences.clearAuth()
+                            historyState = HistoryState.SessionExpired
+                        } else {
+                            historyState = HistoryState.Error(msg)
+                        }
+                    }
                 }
-            }.onFailure { e ->
-                historyState = HistoryState.Error(e.message ?: "Geçmiş yüklenirken bir hata oluştu.")
             }
         }
     }

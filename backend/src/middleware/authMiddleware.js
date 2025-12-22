@@ -10,14 +10,17 @@ const protect = async (req, res, next) => {
   ) {
     try {
       token = req.headers.authorization.split(' ')[1];
+      console.log(`[AuthMiddleware] Verifying token...`);
       const decoded = verifyToken(token);
+      console.log(`[AuthMiddleware] Token decoded. ID: ${decoded.id}`);
 
       req.user = await User.findByPk(decoded.id);
 
       if (!req.user) {
+        console.log(`[AuthMiddleware] User not found for ID: ${decoded.id}`);
         return res.status(401).json({ success: false, message: 'Not authorized, user not found' });
       }
-
+      console.log(`[AuthMiddleware] User found: ${req.user.id}`);
       next();
     } catch (error) {
       console.error(error);

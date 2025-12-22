@@ -39,7 +39,9 @@ class UserPreferences(context: Context) {
         acneLevel: String,
         hasRosacea: Boolean,
         rosaceaLevel: String,
-        isNormal: Boolean
+        isNormal: Boolean,
+        detectedSkinType: String,
+        detectedDisease: String
     ) {
         sharedPreferences.edit {
             putBoolean(KEY_HAS_ECZEMA, hasEczema)
@@ -49,6 +51,8 @@ class UserPreferences(context: Context) {
             putBoolean(KEY_HAS_ROSACEA, hasRosacea)
             putString(KEY_ROSACEA_LEVEL, rosaceaLevel)
             putBoolean(KEY_IS_NORMAL, isNormal)
+            putString(KEY_RESULT_SKIN_TYPE, detectedSkinType)
+            putString(KEY_RESULT_DISEASE, detectedDisease)
         }
     }
     
@@ -63,7 +67,9 @@ class UserPreferences(context: Context) {
             acneLevel = sharedPreferences.getString(KEY_ACNE_LEVEL, "Yok") ?: "Yok",
             hasRosacea = sharedPreferences.getBoolean(KEY_HAS_ROSACEA, false),
             rosaceaLevel = sharedPreferences.getString(KEY_ROSACEA_LEVEL, "Yok") ?: "Yok",
-            isNormal = sharedPreferences.getBoolean(KEY_IS_NORMAL, true)
+            isNormal = sharedPreferences.getBoolean(KEY_IS_NORMAL, true),
+            detectedSkinType = sharedPreferences.getString(KEY_RESULT_SKIN_TYPE, "Bilinmiyor") ?: "Bilinmiyor",
+            detectedDisease = sharedPreferences.getString(KEY_RESULT_DISEASE, "Bilinmiyor") ?: "Bilinmiyor"
         )
     }
     
@@ -172,6 +178,43 @@ class UserPreferences(context: Context) {
         )
     }
 
+    /**
+     * Save the URI of the last captured image for analysis
+     */
+    fun saveLastCapturedImage(uri: String) {
+        sharedPreferences.edit {
+            putString(KEY_LAST_IMAGE_URI, uri)
+        }
+    }
+
+    /**
+     * Get the URI of the last captured image
+     */
+    fun getLastCapturedImage(): String? {
+        return sharedPreferences.getString(KEY_LAST_IMAGE_URI, null)
+    }
+
+
+
+    /**
+     * Save recommended products list as JSON string
+     */
+    fun saveRecommendedProducts(products: List<com.example.glowmance.data.model.Product>) {
+        val json = com.google.gson.Gson().toJson(products)
+        sharedPreferences.edit {
+            putString(KEY_RECOMMENDED_PRODUCTS, json)
+        }
+    }
+
+    /**
+     * Get recommended products list
+     */
+    fun getRecommendedProducts(): List<com.example.glowmance.data.model.Product> {
+        val json = sharedPreferences.getString(KEY_RECOMMENDED_PRODUCTS, null) ?: return emptyList()
+        val type = object : com.google.gson.reflect.TypeToken<List<com.example.glowmance.data.model.Product>>() {}.type
+        return com.google.gson.Gson().fromJson(json, type)
+    }
+
     companion object {
         private const val PREFERENCES_NAME = "glowmance_preferences"
         private const val KEY_COMPLETED_FIRST_ANALYSIS = "completed_first_analysis"
@@ -182,6 +225,9 @@ class UserPreferences(context: Context) {
         private const val KEY_HAS_ROSACEA = "has_rosacea"
         private const val KEY_ROSACEA_LEVEL = "rosacea_level"
         private const val KEY_IS_NORMAL = "is_normal"
+        private const val KEY_RESULT_SKIN_TYPE = "result_skin_type"
+        private const val KEY_RESULT_DISEASE = "result_disease"
+        private const val KEY_RECOMMENDED_PRODUCTS = "recommended_products"
         
         // Auth keys
         private const val KEY_AUTH_TOKEN = "auth_token"
@@ -198,6 +244,9 @@ class UserPreferences(context: Context) {
         private const val KEY_NOTIF_ANALYSIS_REMINDER = "notif_analysis_reminder"
         private const val KEY_NOTIF_CAMPAIGNS = "notif_campaigns"
         private const val KEY_NOTIF_TIPS = "notif_tips"
+
+        // Temp storage for analysis
+        private const val KEY_LAST_IMAGE_URI = "last_image_uri"
         
         // Singleton instance
         @Volatile
@@ -233,5 +282,7 @@ data class SkinAnalysisResult(
     val acneLevel: String = "Yok",
     val hasRosacea: Boolean = false,
     val rosaceaLevel: String = "Yok",
-    val isNormal: Boolean = true
+    val isNormal: Boolean = true,
+    val detectedSkinType: String = "Bilinmiyor",
+    val detectedDisease: String = "Bilinmiyor"
 )

@@ -49,11 +49,11 @@ class AnalysisService {
 
   async getStats(userId) {
     const total = await AnalysisHistory.count({ where: { user_id: userId } });
-    
+
     // Example stats - can be expanded based on JSON content
     // This requires parsing JSON which might be heavy for SQL
     // Better to use MongoDB for aggregation if needed
-    
+
     return {
       totalAnalyses: total,
       lastAnalysis: await AnalysisHistory.findOne({

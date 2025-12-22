@@ -4,7 +4,7 @@ const path = require('path');
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 module.exports = {
-  PORT: 3001,
+  PORT: 3000,
   NODE_ENV: process.env.NODE_ENV || 'development',
 
   // PostgreSQL

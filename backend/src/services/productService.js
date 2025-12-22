@@ -61,9 +61,9 @@ class ProductService {
     const normalizedType = skinType.toLowerCase();
 
     // Check if using external API
-    if (config.PRODUCT_API_KEY && config.PRODUCT_API_URL && config.USE_MOCK_PRODUCTS !== 'true') {
-      return await this.fetchFromExternalAPI({ skinType: normalizedType }, limit);
-    }
+    // Always try external API first
+    const apiProducts = await this.fetchFromExternalAPI({ skinType: normalizedType }, limit);
+    if (apiProducts.length > 0) return apiProducts;
 
     // Use mock data
     const products = this.productsData.skinTypes[normalizedType] || [];
@@ -79,9 +79,9 @@ class ProductService {
     const normalizedDisease = disease.toLowerCase();
 
     // Check if using external API
-    if (config.PRODUCT_API_KEY && config.PRODUCT_API_URL && config.USE_MOCK_PRODUCTS !== 'true') {
-      return await this.fetchFromExternalAPI({ disease: normalizedDisease }, limit);
-    }
+    // Always try external API first
+    const apiProducts = await this.fetchFromExternalAPI({ disease: normalizedDisease }, limit);
+    if (apiProducts.length > 0) return apiProducts;
 
     // Use mock data
     const products = this.productsData.diseases[normalizedDisease] || [];
@@ -99,12 +99,13 @@ class ProductService {
     const normalizedDisease = disease.toLowerCase();
 
     // Check if using external API
-    if (config.PRODUCT_API_KEY && config.PRODUCT_API_URL && config.USE_MOCK_PRODUCTS !== 'true') {
-      return await this.fetchFromExternalAPI({
-        skinType: normalizedType,
-        disease: normalizedDisease
-      }, limit);
-    }
+    // Always try external API first (Open Beauty Facts is free)
+    const apiProducts = await this.fetchFromExternalAPI({
+      skinType: normalizedType,
+      disease: normalizedDisease
+    }, limit);
+
+    if (apiProducts.length > 0) return apiProducts;
 
     // Use mock data - combine products from both categories
     const typeProducts = this.productsData.skinTypes[normalizedType] || [];
@@ -158,37 +159,59 @@ class ProductService {
    * @param {object} params - Query parameters
    * @param {number} limit - Maximum number of products
    */
+  /**
+   * Fetch products from External API (Open Beauty Facts)
+   * @param {object} params - Query parameters (skinType, disease, etc.)
+   * @param {number} limit - Maximum number of products
+   */
   async fetchFromExternalAPI(params, limit) {
     try {
-      const response = await axios.get(config.PRODUCT_API_URL, {
+      console.log('[ProductService] Fetching from Open Beauty Facts...', params);
+
+      // Map internal conditions to Open Beauty Facts search terms
+      // Map internal conditions to Open Beauty Facts search terms
+      let searchTerms = '';
+      if (params.disease) {
+        if (params.disease === 'acne') searchTerms = 'acne';
+        else if (params.disease === 'eczema') searchTerms = 'eczema';
+        else if (params.disease === 'rosacea') searchTerms = 'rosacea';
+        else searchTerms = 'moisturizer'; // Healthy/Normal
+      } else if (params.skinType) {
+        if (params.skinType === 'oily') searchTerms = 'oil control';
+        else if (params.skinType === 'dry') searchTerms = 'dry skin';
+        else searchTerms = 'facial cream';
+      } else {
+        searchTerms = 'skincare';
+      }
+
+      const url = `https://world.openbeautyfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(searchTerms)}&search_simple=1&action=process&json=1&page_size=${limit}`;
+
+      const response = await axios.get(url, {
+        timeout: 10000,
         headers: {
-          'Authorization': `Bearer ${config.PRODUCT_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        params: {
-          ...params,
-          limit
-        },
-        timeout: 5000
+          'User-Agent': 'GlowmanceApp-StudentProject/1.0 (beyza.vtys@example.com)'
+        }
       });
 
-      return response.data.products || [];
+      if (response.data && response.data.products) {
+        // Map OBF format to our Product model
+        return response.data.products.map(p => ({
+          id: p.code || p._id,
+          name: p.product_name || 'Unknown Product',
+          brand: p.brands || 'Generic',
+          imageUrl: p.image_url || p.image_small_url || p.image_front_small_url || p.image_front_url || 'https://via.placeholder.com/150',
+          price: (Math.random() * 50 + 10).toFixed(2), // Mock price as OBF doesn't have it
+          currency: 'TL',
+          // CRITICAL FIX: Convert string to Array for Android
+          ingredients: (p.ingredients_text) ? p.ingredients_text.split(',').map(i => i.trim()) : ['Information not available']
+        }));
+        // Removed strict filter to ensure products are always returned, even with placeholders
+      }
+      return [];
     } catch (error) {
       console.error('❌ External API request failed:', error.message);
       console.log('⚠️  Falling back to mock data...');
-
-      // Fallback to mock data
-      if (params.skinType && params.disease) {
-        return await this.getProductsByTypeAndDisease(params.skinType, params.disease, limit);
-      } else if (params.skinType) {
-        return await this.getProductsBySkinType(params.skinType, limit);
-      } else if (params.disease) {
-        return await this.getProductsByDisease(params.disease, limit);
-      } else if (params.keyword) {
-        return await this.searchProducts(params.keyword, limit);
-      }
-
-      return [];
+      return []; // Caller will handle empty list (or we could fallback to local here)
     }
   }
 
